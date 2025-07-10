@@ -1,0 +1,32 @@
+# API Keys - Never commit these!
+.env
+prod-config.js
+
+# Node modules
+node_modules/
+
+# Build files
+build/
+dist/
+*.zip
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-*
+
+# OS generated files
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test audio files
+assets/test-audio/
+
+# User-specific settings
+chrome-user-data/ 

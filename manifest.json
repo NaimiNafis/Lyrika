@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Lyrika",
+  "version": "1.0.0",
+  "description": "Identifies songs playing in your browser and displays lyrics",
+  "permissions": ["tabCapture", "scripting", "storage"],
+  "host_permissions": ["*://*.acrcloud.com/*", "*://api.genius.com/*"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "assets/icons/icon16.png",
+      "48": "assets/icons/icon48.png",
+      "128": "assets/icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "js/background.js"
+  },
+  "icons": {
+    "16": "assets/icons/icon16.png",
+    "48": "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png"
+  }
+} 

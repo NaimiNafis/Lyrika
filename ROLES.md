@@ -2,7 +2,7 @@
 
 This document outlines the specific responsibilities, tasks, and deliverables for each team member working on the Lyrika browser extension hackathon project.
 
-## API & Core Logic Lead (Person 1)
+## API & Core Logic Lead (Phong)
 
 ### Primary Responsibilities
 - Implement audio capture functionality
@@ -99,7 +99,7 @@ This document outlines the specific responsibilities, tasks, and deliverables fo
 
 ---
 
-## Frontend & UI Lead (Person 2)
+## Frontend & UI Lead (Alvin)
 
 ### Primary Responsibilities
 - Design the extension popup interface

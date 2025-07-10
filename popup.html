@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lyrika</title>
+  <link rel="stylesheet" href="css/popup.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Lyrika</h1>
+    </header>
+
+    <!-- Initial State -->
+    <div id="initial-state">
+      <button id="start-listening" class="primary-button">Identify Song</button>
+      <p class="instruction">Click to identify the song playing in this tab</p>
+    </div>
+
+    <!-- Listening State -->
+    <div id="listening-state" class="hidden">
+      <div class="listening-animation">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+      </div>
+      <p>Listening...</p>
+    </div>
+
+    <!-- Results State -->
+    <div id="results-state" class="hidden">
+      <div class="song-info">
+        <h2 id="song-title" class="copyable" title="Click to copy"></h2>
+        <p id="artist"></p>
+        <a id="youtube-link" class="youtube-icon" target="_blank" title="Open in YouTube">
+          <img src="assets/icons/youtube.png" alt="YouTube">
+        </a>
+      </div>
+      <div class="lyrics-container">
+        <h3>Lyrics</h3>
+        <div id="lyrics"></div>
+      </div>
+      <button id="back-button" class="secondary-button">Identify Another Song</button>
+    </div>
+
+    <!-- Error State -->
+    <div id="error-state" class="hidden">
+      <p id="error-message"></p>
+      <button id="try-again" class="primary-button">Try Again</button>
+    </div>
+
+    <!-- Manual Input Fallback -->
+    <div id="manual-input" class="hidden">
+      <p>Couldn't identify the song? Enter details manually:</p>
+      <input type="text" id="manual-song" placeholder="Song Title">
+      <input type="text" id="manual-artist" placeholder="Artist">
+      <button id="manual-search" class="primary-button">Search Lyrics</button>
+    </div>
+
+    <footer>
+      <p>Using ACRCloud for song identification</p>
+    </footer>
+  </div>
+
+  <script src="js/popup.js"></script>
+</body>
+</html> 
