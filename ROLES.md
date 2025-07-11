@@ -19,22 +19,7 @@ This document outlines the specific responsibilities, tasks, and deliverables fo
 - Add proper error handling for permission issues
 
 #### ACRCloud Integration
-- Build the ACRCloud client with the following structure:
-  ```javascript
-  // Sample ACRCloud client implementation
-  class ACRCloudClient {
-    constructor(config) {
-      this.host = config.host;
-      this.accessKey = config.access_key;
-      this.accessSecret = config.access_secret;
-    }
-    
-    async identifySong(audioData) {
-      // Prepare the audio data and make the API request
-      // Return standardized response
-    }
-  }
-  ```
+- Build the ACRCloud client.
 - Handle ACRCloud response format and extract relevant metadata
 - Extract YouTube ID from `external_metadata.youtube.vid` when available
 
@@ -70,13 +55,12 @@ This document outlines the specific responsibilities, tasks, and deliverables fo
 - [ ] Create API client modules structure
 - [ ] **Security**: Create the `.env` file structure and add to `.gitignore`
 - [ ] **Security**: Set up the build script for API key injection (`build-config.js`)
-- [ ] Create `sample.env` file with empty values for the team
 
 #### Development Phase
 - [ ] Implement audio stream capture from active tab
 - [ ] Create audio data processing for ACRCloud format
-- [ ] Implement `acrcloud-client.js` with identification logic
-- [ ] Implement `genius-client.js` for lyrics fetching
+- [ ] Implement `acrcloud.py` with identification logic
+- [ ] Implement `genius.py` for lyrics fetching
 - [ ] Create logic to handle instrumental tracks (no lyrics)
 - [ ] Create logic to handle cover songs (artist mismatch)
 - [ ] Implement data transformation to the agreed "contract" format
@@ -86,18 +70,6 @@ This document outlines the specific responsibilities, tasks, and deliverables fo
 - [ ] Test audio capture in various scenarios
 - [ ] Test identification with different song types
 - [ ] Document any API limitations discovered
-
-### API Security Responsibilities
-- Implement the environment variables approach (`.env` with build script)
-- Document API key acquisition process for other team members
-- Create secure storage and retrieval for API credentials
-- Test API connections with proper authentication
-
-### Dependencies
-- Requires UI contract from Frontend Lead before finalizing data output structure
-- Coordinate with Integration Lead on message passing between background and popup scripts
-
----
 
 ## Frontend & UI Lead (Alvin)
 
@@ -162,17 +134,6 @@ This document outlines the specific responsibilities, tasks, and deliverables fo
 - [ ] Validate proper display of various result types
 - [ ] Ensure error states are user-friendly
 - [ ] Check for any UI edge cases or overflow issues
-
-### API Security Responsibilities
-- If implementing the user input API key option, create secure input fields
-- Ensure any displayed data is properly sanitized
-- Make sure error messages don't expose sensitive information
-
-### Dependencies
-- Needs data contract from API Lead to build appropriate display components
-- Coordinate with Integration Lead on UI interaction events
-
----
 
 ## Features & Integration Lead (Naimi)
 
@@ -254,7 +215,7 @@ This document outlines the specific responsibilities, tasks, and deliverables fo
   }
   ```
 
-#### Build & Package Script
+#### Build & Package Script (if needed)
 - Implement `package.sh` script for extension packaging:
   ```bash
   #!/bin/bash
