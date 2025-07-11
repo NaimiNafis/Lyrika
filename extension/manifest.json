@@ -4,7 +4,12 @@
   "version": "1.0.0",
   "description": "Identifies songs playing in your browser and displays lyrics",
   "permissions": ["tabCapture", "scripting", "storage"],
-  "host_permissions": ["*://*.acrcloud.com/*", "*://api.genius.com/*"],
+  "host_permissions": [
+    "*://*.acrcloud.com/*", 
+    "*://api.genius.com/*",
+    "http://localhost:5000/*",
+    "http://127.0.0.1:5000/*"
+  ],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
@@ -14,7 +19,8 @@
     }
   },
   "background": {
-    "service_worker": "js/background.js"
+    "service_worker": "js/background.js",
+    "type": "module"
   },
   "icons": {
     "16": "assets/icons/icon16.png",

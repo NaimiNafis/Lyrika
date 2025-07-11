@@ -2,11 +2,39 @@
 
 A browser extension that listens to audio playing in any browser tab, identifies the song, and displays its lyrics, turning your browser into a smart, lyrics-aware music player.
 
-## Problem Statement
+## Project Structure
 
-Lyrika eliminates the manual, multi-step process of searching for lyrics for a song you're currently listening to online. This is perfect for API orchestration and provides a tangible, useful tool for personal use.
+This project uses a client-server architecture:
 
-## Key Features
+1. **Browser Extension (Client)** - Written in JavaScript, captures audio from browser tabs
+2. **Python Server (Backend)** - Processes audio and communicates with external APIs
+
+```
+lyrika/
+├── extension/           # Browser extension (JavaScript)
+│   ├── manifest.json
+│   ├── popup.html
+│   ├── css/
+│   │   └── popup.css
+│   ├── js/
+│   │   ├── background.js
+│   │   └── popup.js
+│   └── assets/
+│       └── icons/
+│
+├── server/              # Python backend
+│   ├── app.py           # Flask application
+│   ├── requirements.txt
+│   ├── api/
+│   │   ├── __init__.py
+│   │   ├── acrcloud.py  # Song identification 
+│   │   └── genius.py    # Lyrics retrieval
+│   └── env.sample       # Sample environment variables
+│
+└── README.md
+```
+
+## Features
 
 - **One-Click Recognition**: Click the extension icon to start listening to the active tab's audio
 - **Real-time Identification**: View "Listening..." status, then see Song Title and Artist upon successful match
@@ -17,68 +45,66 @@ Lyrika eliminates the manual, multi-step process of searching for lyrics for a s
 
 ## Tech Stack
 
-- **Extension Framework**: Plain JavaScript, HTML, CSS with Manifest V3
-- **Primary API**: ACRCloud API (14-day free trial for development and demos)
-- **Secondary API**: Shazam API on RapidAPI (for long-term use with 500 calls/month free tier)
-- **Lyrics API**: Genius API for retrieving full, non-synced lyrics
-- **Core Browser APIs**: chrome.tabCapture for audio and navigator.clipboard for the copy feature
+### Extension (Client)
+- **Framework**: Plain JavaScript, HTML, CSS with Manifest V3
+- **Audio Capture**: chrome.tabCapture API
+- **Communication**: Fetch API for server requests
 
-## Folder Structure
+### Server (Backend)
+- **Framework**: Flask (Python)
+- **Song Recognition**: ACRCloud API
+- **Lyrics Source**: Genius API
+- **Security**: Environment variables for API keys
 
-```
-lyrika/
-├── manifest.json
-├── assets/
-│   └── icons/
-│       ├── icon16.png
-│       ├── icon48.png
-│       └── icon128.png
-├── css/
-│   └── popup.css
-├── js/
-│   ├── api/
-│   │   ├── acrcloud-client.js  <-- Build this for the hackathon (14 days free unlimited)
-│   │   └── shazam-client.js    <-- Placeholder for after (around 17 songs possible searches per day, not suitable for hackathon)
-│   ├── background.js
-│   └── popup.js
-└── popup.html
-```
+## Setup Instructions
 
-## Implementation Plan for Edge Cases
+### Server Setup
+1. Navigate to the server directory: `cd server`
+2. Create a virtual environment: `python -m venv venv`
+3. Activate the environment:
+   - Windows: `venv\Scripts\activate`
+   - macOS/Linux: `source venv/bin/activate`
+4. Install dependencies: `pip install -r requirements.txt`
+5. Copy `env.sample` to `.env` and fill in your API keys
+6. Start the server: `python app.py`
 
-### Instrumental Songs
-- **Trigger**: ACRCloud identifies the song, but Genius API returns no lyrics
-- **Solution**: Display message: "Song Identified! This is an instrumental track."
+### Extension Setup
+1. In Chrome, go to `chrome://extensions/`
+2. Enable "Developer mode"
+3. Click "Load unpacked" and select the `extension` directory
+4. Update the API_BASE_URL in `extension/js/background.js` if your server is not running on localhost:5000
 
-### Cover Versions
-- **Trigger**: ACRCloud identifies cover artist, but Genius has no lyrics for that version
-- **Solution**: Implement fallback search with just song title and display a note: "Displaying original version lyrics."
+## API Keys
 
-### Background Noise/Dialogue
-- **Trigger**: ACRCloud fails to get a match
-- **Solution**: Display message: "Couldn't hear a clear song. Please ensure music is playing without too much background noise."
+You'll need to obtain API keys for:
+1. **ACRCloud** - For song identification (14-day free trial available)
+2. **Genius** - For lyrics retrieval
 
-### Saving Song References
-- **Solution 1 (Link)**: Create clickable YouTube icon using external_metadata.youtube.vid
-- **Solution 2 (Copy)**: Add click listener to song title to copy "Song Title by Artist" to clipboard
+Add these keys to the `.env` file in the server directory.
 
-## Hackathon Strategy Overview
+## Implementation Details
 
-- **MVP First**: Focus on core functionality before extras
-- **API Key Security**: Use environment variables and proper security practices
-- **Testing Framework**: Create test pages with sample audio
-- **Fallback Mechanisms**: Implement manual input when recognition fails
-- **Performance Optimization**: Add debounce and processing state tracking
-- **Demo Preparation**: Create reliable test songs and documentation
+### Extension Flow
+1. User clicks the extension icon and then "Identify Song"
+2. Extension captures audio from the active tab
+3. Audio is converted to base64 and sent to the server
+4. Results are displayed in the extension popup
 
-See `ROLES.md` for detailed implementation tasks for each team member.
+### Server Flow
+1. Server receives audio data from the extension
+2. Audio is processed and sent to ACRCloud for identification
+3. Song metadata is used to search for lyrics on Genius
+4. Combined results are returned to the extension
 
-## API Key Security
+## Edge Cases Handling
 
-For security of API keys, the project uses:
+- **Instrumental Songs**: Display message "This appears to be an instrumental track"
+- **Cover Versions**: Search for lyrics using just song title if artist-specific search fails
+- **Background Noise**: Clear error messages with manual search option
+- **API Failures**: Graceful error handling with user-friendly messages
 
-1. Environment variables with build process
-2. Secure backend proxy approach (optional)
-3. First-time setup flow (optional)
+## Development Notes
 
-See `ROLES.md` for detailed security implementation.
+- Both components include mock data for development without API keys
+- The server has built-in CORS support for local development
+- The extension supports manual search as a fallback option 

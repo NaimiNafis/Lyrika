@@ -1,6 +1,5 @@
 # API Keys - Never commit these!
-.env
-prod-config.js
+server/.env
 
 # Node modules
 node_modules/
