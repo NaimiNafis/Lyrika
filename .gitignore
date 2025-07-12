@@ -1,6 +1,9 @@
 # API Keys - Never commit these!
 server/.env
 server/.venv
+**__pycache__/
+*.wav
+*.mp3
 
 # Node modules
 node_modules/

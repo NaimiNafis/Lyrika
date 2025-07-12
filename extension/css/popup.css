@@ -111,7 +111,7 @@ button {
   margin: 20px 0;
 }
 
-p{
+p {
   margin-bottom: 0;
 }
 
@@ -124,15 +124,34 @@ p{
   animation: sound 1.2s infinite ease-in-out;
 }
 
-.bar:nth-child(1) { animation-delay: 0s; }
-.bar:nth-child(2) { animation-delay: 0.3s; }
-.bar:nth-child(3) { animation-delay: 0.6s; }
-.bar:nth-child(4) { animation-delay: 0.9s; }
+.bar:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.bar:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.bar:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+.bar:nth-child(4) {
+  animation-delay: 0.9s;
+}
 
 @keyframes sound {
-  0% { height: 10px; }
-  50% { height: 50px; }
-  100% { height: 10px; }
+  0% {
+    height: 10px;
+  }
+
+  50% {
+    height: 50px;
+  }
+
+  100% {
+    height: 10px;
+  }
 }
 
 /* Results state */
@@ -151,7 +170,7 @@ p{
   cursor: pointer;
 }
 
-#links{
+#links {
   display: flex;
   justify-content: center;
   gap: 10px;
@@ -191,6 +210,12 @@ p{
   margin-bottom: 10px;
 }
 
+#song-thumbnail {
+  width: 120px;
+  height: 120px;
+  margin-bottom: 10px;
+}
+
 .youtube-icon {
   text-decoration: none;
 }
@@ -202,13 +227,42 @@ p{
 
 .lyrics-container {
   height: 250px;
-  overflow-y: auto;
+  overflow-y: scroll;
   border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 10%;
   background-color: white;
   margin-bottom: 15px;
   resize: vertical;
+  scrollbar-width: none;
+}
+
+.lyrics-container.scrollable {
+  max-height: 250px;
+  overflow-y: scroll;
+  scrollbar-width: none;
+}
+
+/* Webkit scrollbar styles for all lyrics containers */
+.lyrics-container::-webkit-scrollbar,
+.lyrics-container.scrollable::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+.lyrics-container::-webkit-scrollbar-track,
+.lyrics-container.scrollable::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.lyrics-container::-webkit-scrollbar-thumb,
+.lyrics-container.scrollable::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+.lyrics-container::-webkit-scrollbar-button,
+.lyrics-container.scrollable::-webkit-scrollbar-button {
+  display: none;
 }
 
 .lyrics-container h3 {
@@ -259,4 +313,4 @@ footer {
   text-align: center;
   font-size: 12px;
   color: var(--light-text-color);
-} 
+}

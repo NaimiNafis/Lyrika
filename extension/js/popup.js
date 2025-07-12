@@ -21,6 +21,9 @@ const lyricsElem = document.getElementById('lyrics');
 const errorMessageElem = document.getElementById('error-message');
 const youtubeLink = document.getElementById('youtube-link');
 const spotifyLink = document.getElementById('spotify-link');
+const songThumbnail = document.getElementById('song-thumbnail');
+const artistLink = document.getElementById('artist-link');
+const lyricsLink = document.getElementById('lyrics-link');
 
 // Timers and state
 let manualFallbackTimer;
@@ -30,12 +33,18 @@ let audioChunks = [];
 
 // Event listeners
 document.addEventListener('DOMContentLoaded', () => {
+  // Debug: Check if all DOM elements are found
+  console.log('DOM elements check:');
+  console.log('songThumbnail:', songThumbnail);
+  console.log('artistLink:', artistLink);
+  console.log('lyricsLink:', lyricsLink);
+
   // Add event listeners to buttons
   startListeningBtn.addEventListener('click', debounce(startListening, 300));
   tryAgainBtn.addEventListener('click', resetToInitialState);
   backButton.addEventListener('click', resetToInitialState);
   manualSearchBtn.addEventListener('click', handleManualSearch);
-  
+
   // Add click to copy functionality
   songTitleElem.addEventListener('click', copySongInfo);
 
@@ -52,25 +61,25 @@ function startListening() {
     console.log('Already processing audio');
     return;
   }
-  
+
   isProcessing = true;
   showState(listeningState);
   clearTimeout(manualFallbackTimer);
-  
+
   // Show manual input after 7 seconds if no result
   manualFallbackTimer = setTimeout(() => {
     manualInput.classList.remove('hidden');
   }, 7000);
-  
+
   // Get streamId from background script
   chrome.runtime.sendMessage({ action: 'startListening' }, async (response) => {
     console.log('Received streamId response:', response);
-    
+
     if (response.status === 'error' || !response.streamId) {
       displayError(response.message || "Couldn't access tab audio");
       return;
     }
-    
+
     try {
       // Use the streamId to create a MediaStream
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -82,7 +91,7 @@ function startListening() {
         },
         video: false
       });
-      
+
       // Start recording
       captureAudio(stream);
     } catch (error) {
@@ -102,52 +111,52 @@ function captureAudio(stream) {
     const source = audioCtx.createMediaStreamSource(stream);
     const dest = audioCtx.createMediaStreamDestination();
     source.connect(dest);
-    
+
     // Set up MediaRecorder
     mediaRecorder = new MediaRecorder(dest.stream);
     audioChunks = [];
-    
+
     // Handle data availability
     mediaRecorder.ondataavailable = (event) => {
       if (event.data.size > 0) {
         audioChunks.push(event.data);
       }
     };
-    
+
     // When recording stops
     mediaRecorder.onstop = async () => {
       try {
         // Create blob from chunks
         const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        
+
         // Convert to base64
         const base64Data = await blobToBase64(audioBlob);
-        
+
         console.log('Audio captured successfully, sending to server...');
-        
+
         // Stop all tracks
         stream.getTracks().forEach(track => track.stop());
-        
+
         // Send to background for processing
-        chrome.runtime.sendMessage({ 
-          action: 'sendAudioToServer', 
-          audioData: base64Data 
+        chrome.runtime.sendMessage({
+          action: 'sendAudioToServer',
+          audioData: base64Data
         }, handleResponse);
       } catch (error) {
         console.error('Error processing audio:', error);
         displayError('Error processing audio: ' + error.message);
       }
     };
-    
+
     // Start recording
     mediaRecorder.start();
-    
-         // Record for 5 seconds
-     setTimeout(() => {
-       if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-         mediaRecorder.stop();
-       }
-     }, 5000);
+
+    // Record for 5 seconds
+    setTimeout(() => {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+      }
+    }, 5000);
   } catch (error) {
     console.error('Error setting up audio recording:', error);
     displayError('Error setting up audio recording: ' + error.message);
@@ -176,9 +185,9 @@ function blobToBase64(blob) {
 function handleResponse(response) {
   clearTimeout(manualFallbackTimer);
   isProcessing = false;
-  
+
   console.log('Received response:', response);
-  
+
   if (response.status === 'success') {
     displayResults(response);
   } else {
@@ -190,24 +199,63 @@ function handleResponse(response) {
  * Display successful results
  */
 function displayResults(data) {
+  // Debug: Log the received data to see what's available
+  console.log('displayResults received data:', data);
+  console.log('Thumbnail URL:', data.thumbnail);
+  console.log('Artist URL:', data.artist_url);
+  console.log('Genius Lyrics URL:', data.genius_lyrics_url);
+
   // Populate UI elements with data
   songTitleElem.textContent = data.title;
   artistElem.textContent = data.artist;
-  
+
+  // Handle thumbnail image - always show for testing
+  if (songThumbnail) {
+    if (data.thumbnail) {
+      songThumbnail.src = data.thumbnail;
+    } else {
+      songThumbnail.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2VlZSIvPgogIDx0ZXh0IHg9IjUwIiB5PSI1NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5UaHVtYm5haWw8L3RleHQ+Cjwvc3ZnPg==';
+    }
+    songThumbnail.style.display = 'block';
+  }
+
+  // Handle artist link - always show for testing
+  if (artistLink) {
+    if (data.artist_url) {
+      artistLink.href = data.artist_url;
+    } else {
+      artistLink.href = '#';
+    }
+    artistLink.style.display = 'inline-block';
+  }
+
+  // Handle lyrics link - always show for testing
+  if (lyricsLink) {
+    if (data.genius_lyrics_url) {
+      lyricsLink.href = data.genius_lyrics_url;
+    } else {
+      lyricsLink.href = '#';
+    }
+    lyricsLink.style.display = 'inline-block';
+  }
+
   // Handle lyrics
   if (data.lyrics && data.lyrics.trim()) {
     // Format lyrics: ensure proper line breaks and remove any remaining metadata
     let cleanLyrics = data.lyrics.trim();
-    
+
     // Remove any remaining metadata or headers that might still be present
     cleanLyrics = cleanLyrics.replace(/^.*?(Lyrics|lyrics).*?$/m, '');
     cleanLyrics = cleanLyrics.replace(/^.*?Contributors.*?$/m, '');
-    
+
     // Fix common issues with broken lines
     cleanLyrics = cleanLyrics.replace(/([a-z])[\s]*\n[\s]*([a-z])/g, '$1 $2');
-    
+
+    // Add line breaks before capitalized letters (except at the beginning)
+    cleanLyrics = cleanLyrics.replace(/(?<!^)([A-Z])/g, '\n$1');
+
     lyricsElem.textContent = cleanLyrics;
-    
+
     // Add scrolling to the lyrics container if content is long
     const lyricsContainer = document.querySelector('.lyrics-container');
     if (lyricsContainer && cleanLyrics.split('\n').length > 10) {
@@ -216,7 +264,7 @@ function displayResults(data) {
   } else {
     lyricsElem.textContent = 'This appears to be an instrumental track.';
   }
-  
+
   // Handle YouTube link
   if (data.youtubeId) {
     youtubeLink.href = `https://www.youtube.com/watch?v=${data.youtubeId}`;
@@ -225,13 +273,13 @@ function displayResults(data) {
     youtubeLink.classList.add('hidden');
   }
 
-  if( data.spotifyId) {
+  if (data.spotifyId) {
     spotifyLink.href = `https://open.spotify.com/track/${data.spotifyId}`;
     spotifyLink.classList.remove('hidden');
-  }else{
+  } else {
     spotifyLink.classList.add('hidden');
   }
-  
+
   // Show results state
   showState(resultsState);
 }
@@ -251,13 +299,27 @@ function displayError(message) {
 function resetToInitialState() {
   showState(initialState);
   manualInput.classList.add('hidden');
-  
+
   // Clear previous data
   songTitleElem.textContent = '';
   artistElem.textContent = '';
   lyricsElem.textContent = '';
   youtubeLink.classList.add('hidden');
-  
+
+  // Hide enhanced elements
+  if (songThumbnail) {
+    songThumbnail.classList.add('hidden');
+    songThumbnail.src = '';
+  }
+  if (artistLink) {
+    artistLink.classList.add('hidden');
+    artistLink.href = '';
+  }
+  if (lyricsLink) {
+    lyricsLink.classList.add('hidden');
+    lyricsLink.href = '';
+  }
+
   // Clear any copied state
   songTitleElem.dataset.copied = false;
 }
@@ -268,14 +330,14 @@ function resetToInitialState() {
 function handleManualSearch() {
   const songTitle = document.getElementById('manual-song').value.trim();
   const artist = document.getElementById('manual-artist').value.trim();
-  
+
   if (!songTitle) {
     alert('Please enter a song title');
     return;
   }
-  
+
   showState(listeningState);
-  
+
   chrome.runtime.sendMessage({
     action: 'manualSearch',
     songTitle: songTitle,
@@ -284,14 +346,14 @@ function handleManualSearch() {
 }
 
 function openYoutubeLink(event) {
-  if(youtubeLink.href) {
+  if (youtubeLink.href) {
     event.preventDefault();
     window.open(youtubeLink.href, '_blank', 'noopener');
   }
 }
 
 function openSpotifyLink(event) {
-  if(spotifyLink.href) {
+  if (spotifyLink.href) {
     event.preventDefault();
     window.open(spotifyLink.href, '_blank', 'noopener');
   }
@@ -301,7 +363,7 @@ function openSpotifyLink(event) {
  */
 function copySongInfo() {
   const songInfo = `${songTitleElem.textContent} by ${artistElem.textContent}`;
-  
+
   navigator.clipboard.writeText(songInfo)
     .then(() => {
       // Show "Copied!" feedback
@@ -324,7 +386,7 @@ function showState(stateToShow) {
   listeningState.classList.add('hidden');
   resultsState.classList.add('hidden');
   errorState.classList.add('hidden');
-  
+
   // Show the requested state
   stateToShow.classList.remove('hidden');
 }
