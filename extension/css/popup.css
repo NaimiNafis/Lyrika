@@ -1,11 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+
 /* Base styles */
 :root {
-  --primary-color: #005288;
-  --secondary-color: #6aa84f;
-  --background-color: #ffffff;
-  --text-color: #333;
-  --light-text-color: #777;
-  --border-color: #ddd;
+  --primary-color: #FFFC00;
+  --background-color: #191414;
+  --text-color: #FFFFFF;
+  --secondary-text-color: #B3B3B3;
+  --border-color: #333333;
   --error-color: #e74c3c;
 }
 
@@ -15,10 +16,24 @@
   padding: 0;
 }
 
+/* Main popup scrollbar styling */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: #333333;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #FFFFFF;
+  border-radius: 10px;
+}
+
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  width: 350px;
-  /* min-height: 215px; */
+  font-family: 'Montserrat', sans-serif;
+  width: 400px; /* Increased width to accommodate new features */
   background-color: var(--background-color);
   color: var(--text-color);
 }
@@ -35,56 +50,81 @@ body {
   fill: #1DB954;
 }
 
+.bi-music-note-beamed {
+  width: 20px;
+  height: 20px;
+  fill: #FA243C;
+}
+
 .container {
-  padding: 20px;
+  padding: 16px;
 }
 
 header {
   text-align: center;
-  padding-bottom: 10px;
+  padding-bottom: 16px;
   margin-top: 10px;
   margin-bottom: 20px;
   border-bottom: 1px solid var(--border-color);
 }
 
+/* Logo and title styling */
+.logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.header-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 10%;
+}
+
 h1 {
   font-size: 24px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--primary-color);
+  letter-spacing: 1px;
+  margin: 0;
 }
 
 /* Button styles */
 button {
   cursor: pointer;
-  padding: 10px 16px;
-  border-radius: 10px;
+  padding: 12px 18px;
+  border-radius: 500px; /* Spotify uses very rounded buttons */
   font-size: 14px;
-  font-weight: bold;
+  font-weight: 700;
   transition: all 0.2s ease;
   border: none;
+  letter-spacing: 0.5px;
 }
 
 .primary-button {
   background-color: var(--primary-color);
-  color: white;
+  color: var(--background-color);
   width: 100%;
   margin: 10px 0;
 }
 
 .primary-button:hover {
-  background-color: #3a76d8;
+  background-color: #fffb33; /* Slightly lighter yellow on hover */
+  transform: scale(1.02);
 }
 
 .secondary-button {
   background-color: transparent;
-  color: var(--primary-color);
-  border: 1px solid var(--primary-color);
+  color: var(--text-color);
+  border: 1px solid var(--text-color);
   width: 100%;
   margin: 10px 0;
 }
 
 .secondary-button:hover {
-  background-color: rgba(74, 134, 232, 0.1);
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: scale(1.02);
 }
 
 /* State styles */
@@ -97,9 +137,9 @@ button {
 }
 
 .instruction {
-  color: var(--light-text-color);
+  color: var(--secondary-text-color);
   font-size: 14px;
-  margin-top: 8px;
+  margin-top: 12px;
 }
 
 /* Listening animation */
@@ -111,12 +151,21 @@ button {
   margin: 20px 0;
 }
 
+#listening-state p {
+  margin-bottom: 8px;
+  color: var(--secondary-text-color);
+  text-align: center;
+  width: 100%;
+  font-size: 14px;
+}
+
 p {
-  margin-bottom: 0;
+  margin-bottom: 8px;
+  color: var(--secondary-text-color);
 }
 
 .bar {
-  width: 8px;
+  width: 4px;
   height: 30px;
   margin: 0 4px;
   background-color: var(--primary-color);
@@ -154,38 +203,103 @@ p {
   }
 }
 
-/* Results state */
+/* Song Info Container with Album Artwork - Spotify-like layout */
+.song-info-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+  background-color: #282828; /* Slightly lighter than background for contrast */
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.album-artwork-container {
+  flex-shrink: 0;
+  margin-right: 16px;
+  position: relative;
+}
+
+#album-artwork {
+  width: 100px;
+  height: 100px;
+  border-radius: 4px;
+  object-fit: cover;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease;
+}
+
+#album-artwork:hover {
+  transform: scale(1.05);
+}
+
+/* Song info */
 .song-info {
+  flex-grow: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  margin-bottom: 15px;
   position: relative;
 }
 
 #song-title {
   font-size: 18px;
-  margin-bottom: 5px;
-  text-align: center;
+  margin-bottom: 6px;
+  text-align: left;
   cursor: pointer;
+  font-weight: 700;
+  color: var(--text-color);
 }
 
-#links {
+#artist {
+  font-size: 14px;
+  color: var(--secondary-text-color);
+  margin-bottom: 16px;
+  font-weight: 400;
+}
+
+/* Platform links */
+.platform-links {
   display: flex;
+  gap: 16px;
+  margin-top: auto;
+  margin-bottom: 15px; /* Increased vertical spacing between platform links and tabs */
+}
+
+.platform-link {
+  display: flex;
+  align-items: center;
   justify-content: center;
-  gap: 10px;
-  margin-bottom: 10px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #333333;
+  transition: all 0.2s ease;
+}
+
+.platform-link:hover {
+  transform: scale(1.1);
+  background-color: #444444;
+}
+
+.youtube-link:hover {
+  background-color: rgba(255, 0, 0, 0.2);
+}
+
+.spotify-link:hover {
+  background-color: rgba(255, 252, 0, 0.2);
+}
+
+.apple-music-link:hover {
+  background-color: rgba(250, 36, 60, 0.2);
 }
 
 #song-title:hover::after {
   content: 'Copy to clipboard';
   position: absolute;
   top: -25px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
   font-size: 12px;
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
+  background-color: #333333;
+  color: var(--text-color);
   padding: 4px 8px;
   border-radius: 4px;
 }
@@ -194,123 +308,326 @@ p {
   content: 'Copied!';
   position: absolute;
   top: -25px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
   font-size: 12px;
-  background-color: var(--secondary-color);
-  color: white;
+  background-color: var(--primary-color);
+  color: var(--background-color);
   padding: 4px 8px;
   border-radius: 4px;
-  font-weight: bold;
 }
 
-#artist {
+/* Tab styling with improved active state */
+.nav-tabs {
+  margin-top: 15px; /* Additional top spacing */
+  border-bottom: 1px solid var(--border-color);
+}
+
+.nav-tabs .nav-link {
+  color: var(--secondary-text-color);
+  border: none;
+  padding: 8px 12px;
+  transition: all 0.2s ease;
+  position: relative;
   font-size: 14px;
-  color: var(--light-text-color);
-  margin-bottom: 10px;
+  font-weight: 400;
+  letter-spacing: 0.5px;
 }
 
-#song-thumbnail {
-  width: 120px;
-  height: 120px;
-  margin-bottom: 10px;
+.nav-tabs .nav-link.active {
+  color: var(--primary-color);
+  background-color: transparent;
+  font-weight: 700; /* Make active tab bold */
+  border: none;
 }
 
-.youtube-icon {
-  text-decoration: none;
+/* Add an underline to active tab */
+.nav-tabs .nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--primary-color);
+  border-radius: 2px;
 }
 
-.youtube-icon img {
-  width: 24px;
-  height: 24px;
+/* Add hover effect for tabs */
+.nav-tabs .nav-link:hover:not(.active) {
+  color: var(--text-color);
+  background-color: transparent;
+}
+
+.lyrics-header {
+  margin-bottom: 12px;
+  margin-top: 16px;
 }
 
 .lyrics-container {
-  height: 250px;
-  overflow-y: scroll;
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: 10%;
-  background-color: white;
-  margin-bottom: 15px;
-  resize: vertical;
-  scrollbar-width: none;
-}
-
-.lyrics-container.scrollable {
   max-height: 250px;
-  overflow-y: scroll;
-  scrollbar-width: none;
+  overflow-y: auto;
+  padding-right: 8px;
+  margin-bottom: 16px;
 }
 
-/* Webkit scrollbar styles for all lyrics containers */
-.lyrics-container::-webkit-scrollbar,
-.lyrics-container.scrollable::-webkit-scrollbar {
-  width: 0px;
-  background: transparent;
+/* Override scrollbar style for lyrics container */
+.lyrics-container::-webkit-scrollbar {
+  width: 4px;
 }
 
-.lyrics-container::-webkit-scrollbar-track,
-.lyrics-container.scrollable::-webkit-scrollbar-track {
-  background: transparent;
+.lyrics-container::-webkit-scrollbar-track {
+  background: #333333;
+  border-radius: 10px;
 }
 
-.lyrics-container::-webkit-scrollbar-thumb,
-.lyrics-container.scrollable::-webkit-scrollbar-thumb {
-  background: transparent;
-}
-
-.lyrics-container::-webkit-scrollbar-button,
-.lyrics-container.scrollable::-webkit-scrollbar-button {
-  display: none;
+.lyrics-container::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 10px;
 }
 
 .lyrics-container h3 {
   font-size: 16px;
-  margin-bottom: 10px;
-  color: var(--primary-color);
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: var(--text-color);
 }
 
 #lyrics {
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.6;
   white-space: pre-wrap;
+  color: var(--secondary-text-color);
+}
+
+.recommendations-container {
+  max-height: 250px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+/* Override scrollbar style for recommendations container */
+.recommendations-container::-webkit-scrollbar {
+  width: 4px;
+}
+
+.recommendations-container::-webkit-scrollbar-track {
+  background: #333333;
+  border-radius: 10px;
+}
+
+.recommendations-container::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 10px;
+}
+
+#recommendations-placeholder {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.recommendation-item {
+  background-color: #282828;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 12px;
+  transition: all 0.2s ease;
+}
+
+.recommendation-item:hover {
+  background-color: #333333;
+}
+
+.recommendation-item:last-child {
+  margin-bottom: 0;
+}
+
+.recommendation-title {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 4px;
+  color: var(--text-color);
+}
+
+.recommendation-artist {
+  font-size: 12px;
+  color: var(--secondary-text-color);
+  margin-bottom: 8px;
+}
+
+.recommendation-reason {
+  font-size: 12px;
+  color: var(--secondary-text-color);
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.spinner-border {
+  color: var(--primary-color) !important;
+}
+
+/* Search tab styles */
+.search-container {
+  padding: 10px 0;
+}
+
+.manual-search-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 15px 0;
+}
+
+.custom-input-group {
+  position: relative;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.manual-search-form input {
+  padding: 10px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 500px !important; /* Force border-radius */
+  font-size: 14px;
+  background-color: #333333;
+  color: var(--text-color);
+  width: 100%;
+  display: block; /* Ensure the input takes full width */
+  -webkit-appearance: none; /* Remove default styling on iOS */
+  -moz-appearance: none; /* Remove default styling on Firefox */
+  appearance: none; /* Standard property for removing default styling */
+}
+
+/* Override any Bootstrap styles that might be affecting the border-radius */
+.manual-search-form .form-control,
+.manual-search-form input.form-control {
+  border-radius: 500px !important;
+}
+
+.manual-search-form input.error {
+  border-color: var(--error-color);
+}
+
+.manual-search-form input::placeholder {
+  color: var(--secondary-text-color);
+}
+
+.manual-search-form input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(255, 252, 0, 0.5);
+}
+
+.error-message {
+  color: var(--error-color);
+  font-size: 12px;
+  margin-top: 4px;
+  margin-left: 14px;
+}
+
+#search-loading {
+  margin-top: 15px;
+}
+
+/* Search Results Styling */
+#search-results {
+  background-color: #282828;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.search-result-header {
+  margin-bottom: 12px;
+}
+
+#search-result-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-color);
+  margin: 0;
+}
+
+#search-result-artist {
+  font-size: 14px;
+  color: var(--secondary-text-color);
+  margin: 0;
+}
+
+#search-result-lyrics {
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  color: var(--secondary-text-color);
 }
 
 /* Error state */
 #error-state {
   text-align: center;
+  padding: 20px 0;
 }
 
 #error-message {
   color: var(--error-color);
-  margin-bottom: 15px;
-}
-
-/* Manual input */
-#manual-input {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px dashed var(--border-color);
-}
-
-#manual-input p {
+  margin-bottom: 20px;
   font-size: 14px;
-  margin-bottom: 10px;
-}
-
-#manual-input input {
-  width: 100%;
-  padding: 8px;
-  margin-bottom: 10px;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
 }
 
 /* Footer */
 footer {
   margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
   text-align: center;
-  font-size: 12px;
-  color: var(--light-text-color);
 }
+
+footer p {
+  font-size: 11px;
+  color: var(--secondary-text-color);
+} 
+
+/* Spotify-styled button */
+.spotify-button {
+  background-color: transparent;
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 500px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.spotify-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: var(--text-color);
+  transform: scale(1.02);
+}
+
+.spotify-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 252, 0, 0.5);
+}
+
+/* Custom dropdown styling */
+.dropdown-menu-dark {
+  background-color: #282828;
+  border: 1px solid var(--border-color);
+  padding: 8px 0;
+}
+
+.dropdown-menu-dark .dropdown-item {
+  color: var(--secondary-text-color);
+  padding: 8px 16px;
+  font-size: 13px;
+}
+
+.dropdown-menu-dark .dropdown-item:hover {
+  background-color: #333333;
+  color: var(--text-color);
+}
+
+.dropdown-menu-dark .dropdown-item.active {
+  background-color: rgba(255, 252, 0, 0.2);
+  color: var(--primary-color);
+} 
