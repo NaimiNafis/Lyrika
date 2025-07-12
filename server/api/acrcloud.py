@@ -141,27 +141,13 @@ def identify_song_from_audio(audio_data):
         print(f"Audio data size: {len(binary_data)} bytes")
         print(f"Request data: {data}")
         print(f"String to sign: {string_to_sign}")
-        print(f"Generated signature: {sign}")
         
-        response = requests.post(url, files=files, data=data, timeout=ACR_TIMEOUT)
-        
-        print(f"ACRCloud response status: {response.status_code}")
-        print(f"ACRCloud response: {response.text}")  # Show full response for debugging
+        response = requests.post(url, files=files, data=data)
+        print(f"ACRCloud response status code: {response.status_code}")
         
         if response.status_code == 200:
             result = response.json()
-
-            # For development/testing, use this mock response instead
-            if not ACR_ACCESS_KEY:
-                print(
-                    "Warning: Using mock response as ACRCloud credentials are not set"
-                )
-                return mock_identify_song()
-            
-            # TEMPORARY: Use mock data while resolving ACRCloud project limit
-            if result.get('status', {}).get('code') == 3006:
-                print("ACRCloud project limit reached, using mock data for testing")
-                return mock_identify_song()
+            print(f"ACRCloud response: {json.dumps(result, indent=2)}")
             
             # Check if a match was found
             if (
@@ -175,17 +161,44 @@ def identify_song_from_audio(audio_data):
                 title = music.get("title", "")
                 artists = music.get("artists", [{}])
                 artist = artists[0].get("name", "") if artists else ""
+                album_name = music.get("album", {}).get("name", "")
 
                 # Extract YouTube ID if available
                 youtube_id = None
                 if "external_metadata" in music and "youtube" in music["external_metadata"]:
                     youtube_id = music["external_metadata"]["youtube"].get("vid")
+                
+                # Extract Spotify ID if available
+                spotify_id = None
+                if "external_metadata" in music and "spotify" in music["external_metadata"]:
+                    spotify_id = music["external_metadata"]["spotify"].get("track", {}).get("id")
+                
+                # Extract album artwork URLs
+                album_artwork = None
+                # Check if there's cover art in the ACRCloud response
+                if music.get("album") and music["album"].get("coverart_url"):
+                    album_artwork = music["album"].get("coverart_url")
+                
+                # Check for Spotify album cover
+                if "external_metadata" in music and "spotify" in music["external_metadata"]:
+                    if music["external_metadata"]["spotify"].get("album", {}).get("covers"):
+                        covers = music["external_metadata"]["spotify"]["album"]["covers"]
+                        if covers and len(covers) > 0:
+                            album_artwork = covers[0].get("url")
+                
+                # Check for Deezer album cover (often higher quality)
+                if "external_metadata" in music and "deezer" in music["external_metadata"]:
+                    if music["external_metadata"]["deezer"].get("album", {}).get("cover"):
+                        album_artwork = music["external_metadata"]["deezer"]["album"]["cover"]
 
                 return {
                     "status": "success",
                     "title": title,
                     "artist": artist,
+                    "album": album_name,
                     "youtubeId": youtube_id,
+                    "spotifyId": spotify_id,
+                    "albumArtwork": album_artwork,
                     "raw": music,  # Include raw data for debugging/future use
                 }
             else:
@@ -218,12 +231,18 @@ def mock_identify_song():
             "status": "success",
             "title": "Bohemian Rhapsody",
             "artist": "Queen",
+            "album": "A Night at the Opera",
             "youtubeId": "fJ9rUzIMcZQ",
+            "spotifyId": "6l8GvAyoUZwWDgF1e4822w",
+            "albumArtwork": "https://i.scdn.co/image/ab67616d0000b273c8b444df094279e70d0ed856",
             "raw": {
                 "title": "Bohemian Rhapsody",
                 "artists": [{"name": "Queen"}],
                 "album": {"name": "A Night at the Opera"},
-                "external_metadata": {"youtube": {"vid": "fJ9rUzIMcZQ"}},
+                "external_metadata": {
+                    "youtube": {"vid": "fJ9rUzIMcZQ"},
+                    "spotify": {"track": {"id": "6l8GvAyoUZwWDgF1e4822w"}}
+                },
             },
         }
     else:

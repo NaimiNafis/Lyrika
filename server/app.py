@@ -73,7 +73,8 @@ def identify_song():
             
             # Check if Genius returned lyrics
             lyrics = lyrics_info.get('lyrics', '')
-            lyrics_source = 'genius'
+            lyrics_source = lyrics_info.get('lyrics_source', 'genius')
+            formatting_source = lyrics_info.get('formatting', 'basic')
             
             # If Genius didn't return lyrics, try Gemini as a fallback
             if not lyrics or lyrics.strip() == '':
@@ -83,6 +84,7 @@ def identify_song():
                 if gemini_lyrics_info['status'] == 'success':
                     lyrics = gemini_lyrics_info.get('lyrics', '')
                     lyrics_source = 'gemini'
+                    formatting_source = 'gemini'
                     logger.info(f"Successfully retrieved lyrics from Gemini API for '{title}' by '{artist}'")
                 else:
                     logger.warning(f"Gemini API also couldn't find lyrics for '{title}' by '{artist}'")
@@ -92,10 +94,13 @@ def identify_song():
                 'status': 'success',
                 'title': title,
                 'artist': artist,
+                'album': song_info.get('album', ''),
                 'lyrics': lyrics,
                 'youtubeId': song_info.get('youtubeId'),
                 'spotifyId': song_info.get('spotifyId'),
-                'lyrics_source': lyrics_source
+                'albumArtwork': song_info.get('albumArtwork'),
+                'lyrics_source': lyrics_source,
+                'formatting': formatting_source
             }
             return jsonify(result)
         else:

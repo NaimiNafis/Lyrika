@@ -8,7 +8,7 @@ const initialState = document.getElementById('initial-state');
 const listeningState = document.getElementById('listening-state');
 const resultsState = document.getElementById('results-state');
 const errorState = document.getElementById('error-state');
-const manualInput = document.getElementById('manual-input');
+const searchTab = document.getElementById('search-tab');
 
 const startListeningBtn = document.getElementById('start-listening');
 const tryAgainBtn = document.getElementById('try-again');
@@ -26,14 +26,12 @@ const appleMusicLink = document.getElementById('apple-music-link');
 
 // Enhancement elements
 const translateOptions = document.querySelectorAll('.translate-option');
-const analyzeMeaningBtn = document.getElementById('analyze-meaning');
 const getRecommendationsBtn = document.getElementById('get-recommendations');
 
 const lyricsLoadingElem = document.getElementById('lyrics-loading');
-const meaningTextElem = document.getElementById('meaning-text');
-const meaningLoadingElem = document.getElementById('meaning-loading');
 const recommendationsListElem = document.getElementById('recommendations-list');
 const recommendationsLoadingElem = document.getElementById('recommendations-loading');
+const searchLoadingElem = document.getElementById('search-loading');
 
 // Timers and state
 let manualFallbackTimer;
@@ -84,9 +82,13 @@ function startListening() {
   showState(listeningState);
   clearTimeout(manualFallbackTimer);
   
-  // Show manual input after 7 seconds if no result
+  // Show search tab after 7 seconds if no result
   manualFallbackTimer = setTimeout(() => {
-    manualInput.classList.remove('hidden');
+    // Switch to search tab if identification takes too long
+    const searchTabElement = document.getElementById('search-tab');
+    if (searchTabElement) {
+      searchTabElement.click();
+    }
   }, 7000);
   
   // Get streamId from background script
@@ -210,6 +212,11 @@ function handleResponse(response) {
     displayResults(response);
   } else {
     displayError(response.message);
+    // Automatically switch to search tab on error
+    const searchTabElement = document.getElementById('search-tab');
+    if (searchTabElement) {
+      searchTabElement.click();
+    }
   }
 }
 
@@ -284,7 +291,14 @@ function displayResults(data) {
   }
   
   // Handle album artwork
+  if (data.albumArtwork) {
+    // Use album artwork from the API response if available
+    albumArtworkElem.src = data.albumArtwork;
+    console.log('Using album artwork from API:', data.albumArtwork);
+  } else {
+    // Fetch album artwork if not provided in the response
   fetchAlbumArtwork(data.title, data.artist);
+  }
   
   // Handle platform links
   if (data.youtubeId) {
@@ -301,8 +315,15 @@ function displayResults(data) {
     spotifyLink.classList.add('hidden');
   }
   
-  // Apple Music link is hidden by default until we implement it
+  // Handle Apple Music link - using iTunes search for Apple Music URLs
+  const appleSearch = encodeURIComponent(`${data.title} ${data.artist}`);
+  appleMusicLink.href = `https://music.apple.com/search?term=${appleSearch}`;
+  // Only show Apple Music link if we have a title and artist
+  if (data.title && data.artist) {
+    appleMusicLink.classList.remove('hidden');
+  } else {
   appleMusicLink.classList.add('hidden');
+  }
   
   // Show results state
   showState(resultsState);
@@ -377,11 +398,17 @@ function restoreState() {
           spotifyLink.classList.remove('hidden');
         }
         
+        // Set Apple Music link
+        const appleSearch = encodeURIComponent(`${songData.title} ${songData.artist}`);
+        appleMusicLink.href = `https://music.apple.com/search?term=${appleSearch}`;
+        if (songData.title && songData.artist) {
+          appleMusicLink.classList.remove('hidden');
+        }
+        
         // Show results state
         showState(resultsState);
         
-        // Add event listeners for the analyze meaning and get recommendations buttons
-        document.getElementById('analyze-meaning')?.addEventListener('click', handleAnalyzeMeaning);
+        // Add event listener for the get recommendations button
         document.getElementById('get-recommendations')?.addEventListener('click', handleGetRecommendations);
       }
     }
@@ -393,21 +420,29 @@ function restoreState() {
  */
 async function fetchAlbumArtwork(title, artist) {
   try {
-    // First try to get artwork from Spotify if we have a Spotify ID
+    // Set a loading state with default artwork
+    albumArtworkElem.src = 'assets/icons/icon128.png';
+    
+    // Try multiple sources to get the best album artwork
+    
+    // Source 1: Check if we have spotifyId - but use a CORS-friendly approach
     if (currentSongData && currentSongData.spotifyId) {
-      // The server doesn't provide artwork URLs directly, but we can use the Spotify ID
-      // to construct an image URL for the extension
       const spotifyId = currentSongData.spotifyId;
+      // Instead of fetching the embed page (which causes CORS issues),
+      // try using the direct Spotify image URL pattern if we have a spotifyId
+      // Format: https://i.scdn.co/image/{imageId}
       
-      // Set default artwork while we're fetching
-      albumArtworkElem.src = 'assets/icons/icon128.png';
+      // We'll rely on the Last.fm and other APIs below instead of
+      // attempting to fetch from Spotify directly
+    }
       
-      // Try to fetch artwork from Last.fm API (public API, no key needed for basic info)
+    // Source 2: Last.fm API (public API, no key needed for basic info)
+    try {
       const lastFmUrl = `https://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=12dec50804977a8d15e406a4b6d7f250&artist=${encodeURIComponent(artist)}&track=${encodeURIComponent(title)}&format=json`;
       
-      fetch(lastFmUrl)
-        .then(response => response.json())
-        .then(data => {
+      const response = await fetch(lastFmUrl);
+      const data = await response.json();
+      
           if (data && data.track && data.track.album && data.track.album.image) {
             // Get the largest image (last in the array)
             const images = data.track.album.image;
@@ -415,8 +450,83 @@ async function fetchAlbumArtwork(title, artist) {
                               images.find(img => img.size === 'large') ||
                               images[images.length - 1];
             
-            if (largeImage && largeImage['#text']) {
+        if (largeImage && largeImage['#text'] && largeImage['#text'].length > 10) {
               albumArtworkElem.src = largeImage['#text'];
+          saveAlbumArtwork(largeImage['#text']);
+          return;
+        }
+      }
+    } catch (error) {
+      console.log('Error fetching Last.fm artwork:', error);
+      // Continue to next source
+    }
+    
+    // Source 3: iTunes/Apple Music Search API (no auth required)
+    try {
+      const itunesUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(`${title} ${artist}`)}&entity=song&limit=1`;
+      
+      const response = await fetch(itunesUrl);
+      const data = await response.json();
+      
+      if (data && data.results && data.results.length > 0) {
+        // Get the artwork URL and modify it to get higher resolution
+        let artworkUrl = data.results[0].artworkUrl100;
+        // Replace 100x100 with 600x600 for higher resolution
+        artworkUrl = artworkUrl.replace('100x100bb', '600x600bb');
+        
+        albumArtworkElem.src = artworkUrl;
+        saveAlbumArtwork(artworkUrl);
+        return;
+      }
+    } catch (error) {
+      console.log('Error fetching iTunes artwork:', error);
+      // Fall back to default icon
+    }
+    
+    // Source 4: MusicBrainz + Cover Art Archive API
+    // Note: This comes last because it's often slower than the others
+    try {
+      // First search for the release by artist and title
+      const mbUrl = `https://musicbrainz.org/ws/2/release?query=artist:${encodeURIComponent(artist)}%20AND%20release:${encodeURIComponent(title)}&fmt=json`;
+      
+      const mbResponse = await fetch(mbUrl);
+      const mbData = await mbResponse.json();
+      
+      if (mbData && mbData.releases && mbData.releases.length > 0) {
+        const releaseId = mbData.releases[0].id;
+        
+        // Then get artwork from Cover Art Archive using the release ID
+        const artworkUrl = `https://coverartarchive.org/release/${releaseId}/front`;
+        
+        // This is a redirect URL that leads to the actual image
+        const checkResponse = await fetch(artworkUrl, { method: 'HEAD' });
+        
+        if (checkResponse.ok) {
+          albumArtworkElem.src = artworkUrl;
+          saveAlbumArtwork(artworkUrl);
+          return;
+        }
+      }
+    } catch (error) {
+      console.log('Error fetching MusicBrainz/Cover Art Archive artwork:', error);
+      // Fall back to default icon
+    }
+    
+    // If all sources fail, keep the default icon
+    console.log('No album artwork found for', title, 'by', artist);
+    
+  } catch (error) {
+    console.error('Error setting album artwork:', error);
+    // Fallback to default icon
+    albumArtworkElem.src = 'assets/icons/icon128.png';
+  }
+}
+
+/**
+ * Save album artwork URL to storage
+ */
+function saveAlbumArtwork(artworkUrl) {
+  if (!currentSongData) return;
               
               // Update the saved state with the new artwork URL
               saveState({
@@ -427,30 +537,9 @@ async function fetchAlbumArtwork(title, artist) {
                   lyrics: originalLyrics,
                   youtubeId: currentSongData.youtubeId || '',
                   spotifyId: currentSongData.spotifyId || '',
-                  albumArtworkSrc: largeImage['#text']
-                }
-              });
-              
-              return;
-            }
-          }
-          
-          // If Last.fm doesn't have the image, try a Google search as fallback
-          const searchQuery = `${title} ${artist} album cover`;
-          albumArtworkElem.alt = `${title} by ${artist}`;
-        })
-        .catch(error => {
-          console.error('Error fetching album artwork:', error);
-          // Keep the default artwork
-        });
-    } else {
-      // If we don't have a Spotify ID, just use the default icon
-      albumArtworkElem.src = 'assets/icons/icon128.png';
+      albumArtworkSrc: artworkUrl
     }
-  } catch (error) {
-    console.error('Error setting album artwork:', error);
-    albumArtworkElem.src = 'assets/icons/icon128.png';
-  }
+  });
 }
 
 /**
@@ -463,16 +552,6 @@ function resetEnhancementUI() {
   });
   document.querySelector('.translate-option[data-lang="original"]').classList.add('active');
   
-  // Reset meaning tab
-  document.getElementById('meaning-placeholder').classList.remove('hidden');
-  document.getElementById('meaning-loading').classList.add('hidden');
-  document.getElementById('meaning-text').innerHTML = `
-    <div id="meaning-placeholder">
-      <p>Discover what this song is really about.</p>
-      <button id="analyze-meaning" class="btn btn-sm btn-outline-primary">Analyze Meaning</button>
-    </div>
-  `;
-  
   // Reset recommendations tab
   document.getElementById('recommendations-placeholder').classList.remove('hidden');
   document.getElementById('recommendations-loading').classList.add('hidden');
@@ -484,7 +563,6 @@ function resetEnhancementUI() {
   `;
   
   // Add event listeners to new buttons
-  document.getElementById('analyze-meaning').addEventListener('click', handleAnalyzeMeaning);
   document.getElementById('get-recommendations').addEventListener('click', handleGetRecommendations);
 }
 
@@ -546,62 +624,6 @@ async function handleTranslateOption(event) {
     // Hide loading state
     lyricsElem.classList.remove('hidden');
     lyricsLoadingElem.classList.add('hidden');
-  }
-}
-
-/**
- * Handle analyze meaning button click
- */
-async function handleAnalyzeMeaning() {
-  if (!currentSongData) return;
-  
-  // Get elements
-  const placeholderElem = document.getElementById('meaning-placeholder');
-  const meaningTextElem = document.getElementById('meaning-text');
-  
-  // Show loading state
-  placeholderElem.classList.add('hidden');
-  meaningLoadingElem.classList.remove('hidden');
-  
-  try {
-    // Call the meaning analysis API
-    const response = await fetch(`${API_BASE_URL}/explain_meaning`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        title: currentSongData.title,
-        artist: currentSongData.artist,
-        lyrics: originalLyrics
-      })
-    });
-    
-    const data = await response.json();
-    
-    if (data.status === 'success') {
-      // Convert markdown to HTML
-      const markdown = data.meaning;
-      const html = convertMarkdownToHTML(markdown);
-      
-      // Update the meaning text
-      meaningTextElem.innerHTML = html;
-      
-      // Save the meaning analysis to storage
-      const currentState = await getStoredState();
-      if (currentState && currentState.songData) {
-        currentState.songData.meaning = html;
-        saveState(currentState);
-      }
-    } else {
-      meaningTextElem.innerHTML = `<p class="text-danger">Analysis failed: ${data.message || 'Unknown error'}</p>`;
-    }
-  } catch (error) {
-    console.error('Meaning analysis error:', error);
-    meaningTextElem.innerHTML = `<p class="text-danger">Analysis error: ${error.message}</p>`;
-  } finally {
-    // Hide loading state
-    meaningLoadingElem.classList.add('hidden');
   }
 }
 
@@ -709,7 +731,6 @@ function convertMarkdownToHTML(markdown) {
 function displayError(message) {
   errorMessageElem.textContent = message || "Couldn't identify the song. Please try again.";
   showState(errorState);
-  manualInput.classList.remove('hidden');
   
   // Save error state
   saveState({
@@ -723,7 +744,6 @@ function displayError(message) {
  */
 function resetToInitialState() {
   showState(initialState);
-  manualInput.classList.add('hidden');
   
   // Clear previous data
   songTitleElem.textContent = '';
@@ -759,7 +779,8 @@ function handleManualSearch() {
     return;
   }
   
-  showState(listeningState);
+  // Show loading state in search tab
+  document.getElementById('search-loading').classList.remove('hidden');
   
   chrome.runtime.sendMessage({
     action: 'manualSearch',
@@ -768,12 +789,18 @@ function handleManualSearch() {
   }, response => {
     console.log('Manual search response:', response);
     
+    // Hide loading state
+    document.getElementById('search-loading').classList.add('hidden');
+    
     if (response && response.status === 'success') {
       // Apply the same formatting to manual search results
       if (response.lyrics) {
         response.lyrics = formatLyrics(response.lyrics);
       }
       displayResults(response);
+      
+      // Switch to lyrics tab to show results
+      document.getElementById('lyrics-tab').click();
     } else {
       displayError(response?.message || 'Failed to find lyrics for this song.');
     }
@@ -784,6 +811,9 @@ function handleManualSearch() {
  * Handle YouTube link click
  */
 function openYoutubeLink(event) {
+  // Prevent default link behavior
+  event.preventDefault();
+  
   // Open link in new tab
   chrome.tabs.create({ url: youtubeLink.href });
 }
@@ -792,6 +822,9 @@ function openYoutubeLink(event) {
  * Handle Spotify link click
  */
 function openSpotifyLink(event) {
+  // Prevent default link behavior
+  event.preventDefault();
+  
   // Open link in new tab
   chrome.tabs.create({ url: spotifyLink.href });
 }
@@ -800,6 +833,9 @@ function openSpotifyLink(event) {
  * Handle Apple Music link click
  */
 function openAppleMusicLink(event) {
+  // Prevent default link behavior
+  event.preventDefault();
+  
   // Open link in new tab
   chrome.tabs.create({ url: appleMusicLink.href });
 }
