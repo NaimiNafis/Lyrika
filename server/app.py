@@ -64,7 +64,8 @@ def identify_song():
                 'title': title,
                 'artist': artist,
                 'lyrics': lyrics_info.get('lyrics', ''),
-                'youtubeId': song_info.get('youtubeId')
+                'youtubeId': song_info.get('youtubeId'),
+                'spotifyId': song_info.get('spotifyId')
             }
             return jsonify(result)
         else:

@@ -178,11 +178,17 @@ def identify_song_from_audio(audio_data):
                 if 'external_metadata' in music and 'youtube' in music['external_metadata']:
                     youtube_id = music['external_metadata']['youtube'].get('vid')
                 
+                # Extract Spotify ID if available
+                spotify_id = None
+                if 'external_metadata' in music and 'spotify' in music['external_metadata'] and 'track' in music['external_metadata']['spotify']:
+                    spotify_id = music['external_metadata']['spotify']['track'].get('id')
+
                 return {
                     'status': 'success',
                     'title': title,
                     'artist': artist,
                     'youtubeId': youtube_id,
+                    'spotifyId': spotify_id,
                     'raw': music  # Include raw data for debugging/future use
                 }
             else:
