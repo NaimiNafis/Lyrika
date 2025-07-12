@@ -12,6 +12,9 @@ import base64
 import requests
 from urllib.parse import urlencode
 import json
+import io
+import subprocess
+import tempfile
 
 # ACRCloud API configuration
 ACR_HOST = os.environ.get('ACRCLOUD_HOST', 'identify-global-v2.acrcloud.com')
@@ -33,12 +36,69 @@ def identify_song_from_audio(audio_data):
         # Convert base64 string to binary
         binary_data = base64.b64decode(audio_data)
         
+        # Check audio format and size
+        print(f"Audio data length: {len(audio_data)} characters")
+        print(f"Binary data size: {len(binary_data)} bytes")
+        
+        # Convert WebM to WAV for ACRCloud compatibility using ffmpeg
+        try:
+            # Create temporary files for conversion
+            with tempfile.NamedTemporaryFile(suffix='.webm', delete=False) as webm_file:
+                webm_file.write(binary_data)
+                webm_path = webm_file.name
+            
+            wav_path = webm_path.replace('.webm', '.wav')
+            
+            # Use ffmpeg to convert WebM to WAV with better quality for ACRCloud
+            cmd = [
+                'ffmpeg', '-i', webm_path, 
+                '-acodec', 'pcm_s16le',  # 16-bit PCM
+                '-ar', '44100',          # 44.1kHz sample rate (CD quality)
+                '-ac', '2',              # Stereo (ACRCloud prefers stereo)
+                '-af', 'volume=2.0',     # Increase volume
+                '-y',                    # Overwrite output file
+                wav_path
+            ]
+            
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            
+            if result.returncode == 0:
+                # Read the converted WAV file
+                with open(wav_path, 'rb') as wav_file:
+                    wav_data = wav_file.read()
+                
+                print(f"Converted to WAV: {len(wav_data)} bytes")
+                binary_data = wav_data  # Use the converted WAV data
+            else:
+                print(f"FFmpeg conversion failed: {result.stderr}")
+            
+            # Clean up temporary files
+            os.unlink(webm_path)
+            if os.path.exists(wav_path):
+                os.unlink(wav_path)
+                
+        except Exception as e:
+            print(f"Error converting audio: {e}")
+            # Fallback to original data if conversion fails
+            pass
+        
+        # Save the converted WAV file for manual inspection
+        try:
+            with open('debug_output.wav', 'wb') as debug_file:
+                debug_file.write(binary_data)
+            print('Saved debug_output.wav for manual inspection.')
+        except Exception as e:
+            print(f'Error saving debug_output.wav: {e}')
+        
         # Prepare request
         http_method = "POST"
         http_uri = "/v1/identify"
         data_type = "audio"
         signature_version = "1"
         timestamp = str(int(time.time()))
+        
+        # Try different data_type that ACRCloud might expect
+        # data_type = "audio"  # or try "audio" vs "audio_data"
         
         # Generate signature
         string_to_sign = "\n".join([http_method, http_uri, ACR_ACCESS_KEY, 
@@ -53,8 +113,10 @@ def identify_song_from_audio(audio_data):
         ).decode('utf-8')
         
         # Prepare request data
+        # ACRCloud expects the audio file to be sent as 'sample' in multipart form data
+        # Try different approaches for the file upload
         files = {
-            "sample": binary_data
+            "sample": ("sample.wav", binary_data, "audio/wav")
         }
         
         data = {
@@ -62,12 +124,27 @@ def identify_song_from_audio(audio_data):
             'data_type': data_type,
             'signature': sign,
             'signature_version': signature_version,
-            'timestamp': timestamp
+            'timestamp': timestamp,
+            'sample_bytes': str(len(binary_data))  # Add sample_bytes as required by ACRCloud
         }
+        
+        # Try adding additional parameters that ACRCloud might expect
+        # data['sample_bytes'] = str(len(binary_data))
+        # data['sample_hz'] = '44100'
         
         # Make request to ACRCloud
         url = f"https://{ACR_HOST}{http_uri}"
+        print(f"Making request to ACRCloud: {url}")
+        print(f"ACR_ACCESS_KEY: {ACR_ACCESS_KEY[:10]}...")  # Show first 10 chars for debugging
+        print(f"Audio data size: {len(binary_data)} bytes")
+        print(f"Request data: {data}")
+        print(f"String to sign: {string_to_sign}")
+        print(f"Generated signature: {sign}")
+        
         response = requests.post(url, files=files, data=data, timeout=ACR_TIMEOUT)
+        
+        print(f"ACRCloud response status: {response.status_code}")
+        print(f"ACRCloud response: {response.text}")  # Show full response for debugging
         
         if response.status_code == 200:
             result = response.json()
@@ -76,6 +153,13 @@ def identify_song_from_audio(audio_data):
             if not ACR_ACCESS_KEY:
                 print("Warning: Using mock response as ACRCloud credentials are not set")
                 return mock_identify_song()
+            
+            # TEMPORARY: Use mock data while resolving ACRCloud project limit
+            if result.get('status', {}).get('code') == 3006:
+                print("ACRCloud project limit reached, using mock data for testing")
+                return mock_identify_song()
+            
+
             
             # Check if a match was found
             if (result.get('status', {}).get('code') == 0 and 
