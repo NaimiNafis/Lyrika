@@ -20,7 +20,7 @@
     </div>
 
     <!-- Listening State -->
-    <div id="listening-state" class="hidden">
+    <div id="listening-state" class="hidden text-center">
       <div class="listening-animation">
         <div class="bar"></div>
         <div class="bar"></div>
@@ -28,7 +28,7 @@
         <div class="bar"></div>
       </div>
       <p>Listening...</p>
-      <p>audio will become silent for 5 seconds</p>
+      <p>Audio will become silent for 5 seconds</p>
     </div>
 
     <!-- Results State -->
@@ -86,10 +86,10 @@
           <div class="lyrics-header d-flex justify-content-between align-items-center">
             <h3>Lyrics</h3>
             <div class="dropdown">
-              <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" id="translateDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+              <button class="spotify-button dropdown-toggle" type="button" id="translateDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                 Translate
               </button>
-              <ul class="dropdown-menu" aria-labelledby="translateDropdown">
+              <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="translateDropdown">
                 <li><a class="dropdown-item translate-option" href="#" data-lang="original">Original</a></li>
                 <li><a class="dropdown-item translate-option" href="#" data-lang="Spanish">Spanish</a></li>
                 <li><a class="dropdown-item translate-option" href="#" data-lang="French">French</a></li>
@@ -118,7 +118,7 @@
             <div id="recommendations-list">
               <div id="recommendations-placeholder">
                 <p>Find more songs like this one.</p>
-                <button id="get-recommendations" class="btn btn-sm btn-outline-primary">Get Recommendations</button>
+                <button id="get-recommendations" class="spotify-button">Get Recommendations</button>
               </div>
             </div>
             <div id="recommendations-loading" class="text-center p-3 hidden">
@@ -146,6 +146,17 @@
                 <span class="visually-hidden">Loading...</span>
               </div>
               <p class="mt-2">Searching for lyrics...</p>
+            </div>
+            
+            <!-- Search Results -->
+            <div id="search-results" class="hidden mt-4">
+              <div class="search-result-header d-flex justify-content-between align-items-center">
+                <h4 id="search-result-title">Song Title</h4>
+                <p id="search-result-artist">Artist</p>
+              </div>
+              <div class="lyrics-container">
+                <div id="search-result-lyrics"></div>
+              </div>
             </div>
           </div>
         </div>

@@ -297,7 +297,7 @@ function displayResults(data) {
     console.log('Using album artwork from API:', data.albumArtwork);
   } else {
     // Fetch album artwork if not provided in the response
-  fetchAlbumArtwork(data.title, data.artist);
+    fetchAlbumArtwork(data.title, data.artist);
   }
   
   // Handle platform links
@@ -322,11 +322,17 @@ function displayResults(data) {
   if (data.title && data.artist) {
     appleMusicLink.classList.remove('hidden');
   } else {
-  appleMusicLink.classList.add('hidden');
+    appleMusicLink.classList.add('hidden');
   }
   
   // Show results state
   showState(resultsState);
+  
+  // Ensure the lyrics tab is active
+  const lyricsTab = document.getElementById('lyrics-tab');
+  if (lyricsTab) {
+    lyricsTab.click();
+  }
   
   // Save state to storage
   saveState({
@@ -407,6 +413,12 @@ function restoreState() {
         
         // Show results state
         showState(resultsState);
+        
+        // Ensure the lyrics tab is active
+        const lyricsTab = document.getElementById('lyrics-tab');
+        if (lyricsTab) {
+          lyricsTab.click();
+        }
         
         // Add event listener for the get recommendations button
         document.getElementById('get-recommendations')?.addEventListener('click', handleGetRecommendations);
@@ -558,7 +570,7 @@ function resetEnhancementUI() {
   document.getElementById('recommendations-list').innerHTML = `
     <div id="recommendations-placeholder">
       <p>Find more songs like this one.</p>
-      <button id="get-recommendations" class="btn btn-sm btn-outline-primary">Get Recommendations</button>
+      <button id="get-recommendations" class="spotify-button">Get Recommendations</button>
     </div>
   `;
   
@@ -781,6 +793,7 @@ function handleManualSearch() {
   
   // Show loading state in search tab
   document.getElementById('search-loading').classList.remove('hidden');
+  document.getElementById('search-results').classList.add('hidden');
   
   chrome.runtime.sendMessage({
     action: 'manualSearch',
@@ -797,12 +810,21 @@ function handleManualSearch() {
       if (response.lyrics) {
         response.lyrics = formatLyrics(response.lyrics);
       }
-      displayResults(response);
       
-      // Switch to lyrics tab to show results
-      document.getElementById('lyrics-tab').click();
+      // Display results in the search tab
+      document.getElementById('search-result-title').textContent = response.title || songTitle;
+      document.getElementById('search-result-artist').textContent = response.artist || artist;
+      document.getElementById('search-result-lyrics').textContent = response.lyrics || 'No lyrics found for this song.';
+      document.getElementById('search-results').classList.remove('hidden');
+      
+      // Make sure we're on the search tab
+      document.getElementById('search-tab').click();
     } else {
-      displayError(response?.message || 'Failed to find lyrics for this song.');
+      // Show error message in the search tab
+      document.getElementById('search-result-title').textContent = songTitle;
+      document.getElementById('search-result-artist').textContent = artist || '';
+      document.getElementById('search-result-lyrics').textContent = 'No lyrics found for this song.';
+      document.getElementById('search-results').classList.remove('hidden');
     }
   });
 }
