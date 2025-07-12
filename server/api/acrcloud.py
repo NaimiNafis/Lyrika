@@ -22,6 +22,32 @@ ACR_HOST = os.environ.get("ACRCLOUD_HOST", "identify-ap-southeast-1.acrcloud.com
 ACR_ACCESS_KEY = os.environ.get("ACRCLOUD_ACCESS_KEY", "")
 ACR_ACCESS_SECRET = os.environ.get("ACRCLOUD_ACCESS_SECRET", "")
 ACR_TIMEOUT = int(os.environ.get("ACRCLOUD_TIMEOUT", 10))
+GENIUS_ACCESS_TOKEN = os.environ.get("GENIUS_ACCESS_TOKEN", "")
+GENIUS_BASE_URL = "https://api.genius.com"
+HEADERS = {"Authorization": f"Bearer {GENIUS_ACCESS_TOKEN}"}
+
+
+def search_song(song_name: str):
+    url = f"{GENIUS_BASE_URL}/search?q={song_name}"
+    response = requests.get(url, headers=HEADERS)
+    data = response.json()
+
+    if response.status_code != 200:
+        print(f"Error: {response.status_code} - {data.get('error_description')}")
+        return None
+
+    if not data["response"]["hits"]:
+        print("No song found.")
+        return None
+
+    song = data["response"]["hits"][0]["result"]
+    return {
+        "title": song["title"],
+        "artist": song["primary_artist"]["name"],
+        "song_url": song["url"],
+        "artist_url": song["primary_artist"]["url"],
+        "thumbnail": song["song_art_image_thumbnail_url"],
+    }
 
 
 def identify_song_from_audio(audio_data):
@@ -39,8 +65,8 @@ def identify_song_from_audio(audio_data):
         binary_data = base64.b64decode(audio_data)
 
         # Check audio format and size
-        print(f"Audio data length: {len(audio_data)} characters")
-        print(f"Binary data size: {len(binary_data)} bytes")
+        # print(f"Audio data length: {len(audio_data)} characters")
+        # print(f"Binary data size: {len(binary_data)} bytes")
 
         # Convert WebM to WAV for ACRCloud compatibility using ffmpeg
         try:
@@ -75,7 +101,7 @@ def identify_song_from_audio(audio_data):
                 with open(wav_path, "rb") as wav_file:
                     wav_data = wav_file.read()
 
-                print(f"Converted to WAV: {len(wav_data)} bytes")
+                # print(f"Converted to WAV: {len(wav_data)} bytes")
                 binary_data = wav_data  # Use the converted WAV data
             else:
                 print(f"FFmpeg conversion failed: {result.stderr}")
@@ -94,7 +120,6 @@ def identify_song_from_audio(audio_data):
         try:
             with open("server/debug_output.wav", "wb") as debug_file:
                 debug_file.write(binary_data)
-            print("Saved debug_output.wav for manual inspection.")
         except Exception as e:
             print(f"Error saving debug_output.wav: {e}")
 
@@ -150,19 +175,19 @@ def identify_song_from_audio(audio_data):
 
         # Make request to ACRCloud
         url = f"https://{ACR_HOST}{http_uri}"
-        print(f"Making request to ACRCloud: {url}")
-        print(
-            f"ACR_ACCESS_KEY: {ACR_ACCESS_KEY[:10]}..."
-        )  # Show first 10 chars for debugging
-        print(f"Audio data size: {len(binary_data)} bytes")
-        print(f"Request data: {data}")
-        print(f"String to sign: {string_to_sign}")
-        print(f"Generated signature: {sign}")
+        # print(f"Making request to ACRCloud: {url}")
+        # print(
+        #     f"ACR_ACCESS_KEY: {ACR_ACCESS_KEY[:10]}..."
+        # )  # Show first 10 chars for debugging
+        # print(f"Audio data size: {len(binary_data)} bytes")
+        # print(f"Request data: {data}")
+        # print(f"String to sign: {string_to_sign}")
+        # print(f"Generated signature: {sign}")
 
         response = requests.post(url, files=files, data=data, timeout=ACR_TIMEOUT)
 
-        print(f"ACRCloud response status: {response.status_code}")
-        print(f"ACRCloud response: {response.text}")  # Show full response for debugging
+        # print(f"ACRCloud response status: {response.status_code}")
+        # print(f"ACRCloud response: {response.text}")  # Show full response for debugging
 
         if response.status_code == 200:
             result = response.json()
@@ -201,10 +226,29 @@ def identify_song_from_audio(audio_data):
                 ):
                     youtube_id = music["external_metadata"]["youtube"].get("vid")
 
+                # Call genius API to get lyrics URL
+                print(f"DEBUG: Calling search_song for: '{title}' by '{artist}'")
+                info = search_song(f"{title} {artist}")
+                print(f"DEBUG: search_song returned: {info}")
+
+                artist_url = info.get("artist_url", "")
+                thumbnail = info.get("thumbnail", "")
+                genius_lyrics_url = info.get("song_url", "")
+
+                print(f"DEBUG: artist_url = {artist_url}")
+                print(f"DEBUG: thumbnail = {thumbnail}")
+                print(f"DEBUG: genius_lyrics_url = {genius_lyrics_url}")
+
+                for i in info:
+                    print(f"{i}: {info[i]}")
+
                 return {
                     "status": "success",
                     "title": title,
                     "artist": artist,
+                    "artist_url": artist_url,
+                    "thumbnail": thumbnail,
+                    "genius_lyrics_url": genius_lyrics_url,
                     "youtubeId": youtube_id,
                     "raw": music,  # Include raw data for debugging/future use
                 }

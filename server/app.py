@@ -52,13 +52,17 @@ def identify_song():
             artist = song_info.get("artist")
             lyrics_info = get_lyrics_by_song(title, artist)
 
-            # Combine results
+            # Combine results with enhanced fields from ACRCloud
             result = {
                 "status": "success",
                 "title": title,
                 "artist": artist,
                 "lyrics": lyrics_info.get("lyrics", ""),
                 "youtubeId": song_info.get("youtubeId"),
+                # Add enhanced fields from ACRCloud
+                "thumbnail": song_info.get("thumbnail", ""),
+                "artist_url": song_info.get("artist_url", ""),
+                "genius_lyrics_url": song_info.get("genius_lyrics_url", ""),
             }
             return jsonify(result)
         else:
@@ -84,12 +88,13 @@ def get_lyrics():
     """
     title = request.args.get("title")
     artist = request.args.get("artist", "")
-
+    print(f"Fetching lyrics for {title} by {artist}")
     if not title:
         return jsonify({"status": "error", "message": "Missing song title"}), 400
 
     try:
         lyrics_info = get_lyrics_by_song(title, artist)
+        print(f"Lyrics fetched: {lyrics_info}")
         return jsonify(lyrics_info)
     except Exception as e:
         return (

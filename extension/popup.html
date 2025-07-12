@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lyrika</title>
   <link rel="stylesheet" href="css/popup.css">
 </head>
+
 <body>
   <div class="container">
     <header>
@@ -33,11 +35,20 @@
     <!-- Results State -->
     <div id="results-state" class="hidden">
       <div class="song-info">
+        <img id="song-thumbnail" class="song-thumbnail" alt="Song artwork">
         <h2 id="song-title" class="copyable" title="Click to copy"></h2>
         <p id="artist"></p>
-        <a id="youtube-link" class="youtube-icon" target="_blank" title="Open in YouTube">
-          <img src="assets/icons/youtube.png" alt="YouTube">
-        </a>
+        <div class="song-links">
+          <a id="youtube-link" class="youtube-icon" target="_blank" title="Open in YouTube">
+            <img src="assets/youtube.png" alt="YouTube" class="button-icon">
+          </a>
+          <a id="artist-link" class="artist-link" target="_blank" title="View Artist Page">
+            <img src="assets/artist.png" alt="Artist" class="button-icon">
+          </a>
+          <a id="lyrics-link" class="lyrics-link" target="_blank" title="View Lyrics on Genius">
+            <img src="assets/song-lyrics.png" alt="Lyrics" class="button-icon">
+          </a>
+        </div>
       </div>
       <div class="lyrics-container">
         <h3>Lyrics</h3>
@@ -67,4 +78,5 @@
 
   <script src="js/popup.js"></script>
 </body>
-</html> 
+
+</html>

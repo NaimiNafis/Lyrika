@@ -106,15 +106,34 @@ button {
   animation: sound 1.2s infinite ease-in-out;
 }
 
-.bar:nth-child(1) { animation-delay: 0s; }
-.bar:nth-child(2) { animation-delay: 0.3s; }
-.bar:nth-child(3) { animation-delay: 0.6s; }
-.bar:nth-child(4) { animation-delay: 0.9s; }
+.bar:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.bar:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.bar:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+.bar:nth-child(4) {
+  animation-delay: 0.9s;
+}
 
 @keyframes sound {
-  0% { height: 10px; }
-  50% { height: 50px; }
-  100% { height: 10px; }
+  0% {
+    height: 10px;
+  }
+
+  50% {
+    height: 50px;
+  }
+
+  100% {
+    height: 10px;
+  }
 }
 
 /* Note styling */
@@ -174,14 +193,7 @@ button {
   margin-bottom: 10px;
 }
 
-.youtube-icon {
-  text-decoration: none;
-}
 
-.youtube-icon img {
-  width: 24px;
-  height: 24px;
-}
 
 .lyrics-container {
   max-height: 200px;
@@ -266,4 +278,38 @@ footer {
   text-align: center;
   font-size: 12px;
   color: var(--light-text-color);
-} 
+}
+
+/* Enhanced features - minimal styling */
+.song-thumbnail {
+  width: 100px;
+  height: 100px;
+  border-radius: 4px;
+  margin: 10px auto;
+  display: block;
+}
+
+.artist-link,
+.lyrics-link,
+.youtube-icon {
+  display: inline-block;
+  padding: 8px;
+  margin: 5px;
+  background: #4a86e8;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.artist-link:hover,
+.lyrics-link:hover,
+.youtube-icon:hover {
+  background: #3b78d8;
+}
+
+.button-icon {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
