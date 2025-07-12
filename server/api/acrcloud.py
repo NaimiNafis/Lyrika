@@ -4,31 +4,33 @@ ACRCloud API Integration
 Handles song identification using the ACRCloud API.
 """
 
+import base64
+import hashlib
+import hmac
+import json
 import os
 import time
-import hmac
-import hashlib
-import base64
-import requests
 from urllib.parse import urlencode
 import json
 import io
 import subprocess
 import tempfile
+import requests
 
 # ACRCloud API configuration
-ACR_HOST = os.environ.get('ACRCLOUD_HOST', 'identify-global-v2.acrcloud.com')
-ACR_ACCESS_KEY = os.environ.get('ACRCLOUD_ACCESS_KEY', '')
-ACR_ACCESS_SECRET = os.environ.get('ACRCLOUD_ACCESS_SECRET', '')
-ACR_TIMEOUT = int(os.environ.get('ACRCLOUD_TIMEOUT', 10))
+ACR_HOST = os.environ.get("ACRCLOUD_HOST", "identify-ap-southeast-1.acrcloud.com")
+ACR_ACCESS_KEY = os.environ.get("ACRCLOUD_ACCESS_KEY", "")
+ACR_ACCESS_SECRET = os.environ.get("ACRCLOUD_ACCESS_SECRET", "")
+ACR_TIMEOUT = int(os.environ.get("ACRCLOUD_TIMEOUT", 10))
+
 
 def identify_song_from_audio(audio_data):
     """
     Identify a song using ACRCloud API.
-    
+
     Args:
         audio_data (str): Base64-encoded audio data
-    
+
     Returns:
         dict: Song identification result
     """
@@ -97,40 +99,40 @@ def identify_song_from_audio(audio_data):
         signature_version = "1"
         timestamp = str(int(time.time()))
         
-        # Try different data_type that ACRCloud might expect
-        # data_type = "audio"  # or try "audio" vs "audio_data"
-        
         # Generate signature
-        string_to_sign = "\n".join([http_method, http_uri, ACR_ACCESS_KEY, 
-                                   data_type, signature_version, timestamp])
-        
+        string_to_sign = "\n".join(
+            [
+                http_method,
+                http_uri,
+                ACR_ACCESS_KEY,
+                data_type,
+                signature_version,
+                timestamp,
+            ]
+        )
+
         sign = base64.b64encode(
             hmac.new(
-                ACR_ACCESS_SECRET.encode('utf-8'),
-                string_to_sign.encode('utf-8'),
-                digestmod=hashlib.sha1
+                ACR_ACCESS_SECRET.encode("utf-8"),
+                string_to_sign.encode("utf-8"),
+                digestmod=hashlib.sha1,
             ).digest()
-        ).decode('utf-8')
-        
+        ).decode("utf-8")
+
         # Prepare request data
         # ACRCloud expects the audio file to be sent as 'sample' in multipart form data
-        # Try different approaches for the file upload
         files = {
             "sample": ("sample.wav", binary_data, "audio/wav")
         }
         
         data = {
-            'access_key': ACR_ACCESS_KEY,
-            'data_type': data_type,
-            'signature': sign,
-            'signature_version': signature_version,
-            'timestamp': timestamp,
-            'sample_bytes': str(len(binary_data))  # Add sample_bytes as required by ACRCloud
+            "access_key": ACR_ACCESS_KEY,
+            "data_type": data_type,
+            "signature": sign,
+            "signature_version": signature_version,
+            "timestamp": timestamp,
+            "sample_bytes": str(len(binary_data))  # Add sample_bytes as required by ACRCloud
         }
-        
-        # Try adding additional parameters that ACRCloud might expect
-        # data['sample_bytes'] = str(len(binary_data))
-        # data['sample_hz'] = '44100'
         
         # Make request to ACRCloud
         url = f"https://{ACR_HOST}{http_uri}"
@@ -148,10 +150,12 @@ def identify_song_from_audio(audio_data):
         
         if response.status_code == 200:
             result = response.json()
-            
+
             # For development/testing, use this mock response instead
             if not ACR_ACCESS_KEY:
-                print("Warning: Using mock response as ACRCloud credentials are not set")
+                print(
+                    "Warning: Using mock response as ACRCloud credentials are not set"
+                )
                 return mock_identify_song()
             
             # TEMPORARY: Use mock data while resolving ACRCloud project limit
@@ -159,83 +163,72 @@ def identify_song_from_audio(audio_data):
                 print("ACRCloud project limit reached, using mock data for testing")
                 return mock_identify_song()
             
-
-            
             # Check if a match was found
-            if (result.get('status', {}).get('code') == 0 and 
-                'metadata' in result and 
-                'music' in result['metadata'] and 
-                len(result['metadata']['music']) > 0):
-                
+            if (
+                result.get("status", {}).get("code") == 0
+                and "metadata" in result
+                and "music" in result["metadata"]
+                and len(result["metadata"]["music"]) > 0
+            ):
                 # Extract song information
-                music = result['metadata']['music'][0]
-                title = music.get('title', '')
-                artists = music.get('artists', [{}])
-                artist = artists[0].get('name', '') if artists else ''
-                
+                music = result["metadata"]["music"][0]
+                title = music.get("title", "")
+                artists = music.get("artists", [{}])
+                artist = artists[0].get("name", "") if artists else ""
+
                 # Extract YouTube ID if available
                 youtube_id = None
-                if 'external_metadata' in music and 'youtube' in music['external_metadata']:
-                    youtube_id = music['external_metadata']['youtube'].get('vid')
-                
-                # Extract Spotify ID if available
-                spotify_id = None
-                if 'external_metadata' in music and 'spotify' in music['external_metadata'] and 'track' in music['external_metadata']['spotify']:
-                    spotify_id = music['external_metadata']['spotify']['track'].get('id')
+                if "external_metadata" in music and "youtube" in music["external_metadata"]:
+                    youtube_id = music["external_metadata"]["youtube"].get("vid")
 
                 return {
-                    'status': 'success',
-                    'title': title,
-                    'artist': artist,
-                    'youtubeId': youtube_id,
-                    'spotifyId': spotify_id,
-                    'raw': music  # Include raw data for debugging/future use
+                    "status": "success",
+                    "title": title,
+                    "artist": artist,
+                    "youtubeId": youtube_id,
+                    "raw": music,  # Include raw data for debugging/future use
                 }
             else:
                 # No match found
                 return {
-                    'status': 'error',
-                    'message': 'Could not identify song. Please ensure music is playing clearly.'
+                    "status": "error",
+                    "message": "Could not identify song. Please ensure music is playing clearly.",
                 }
         else:
             # API request failed
             return {
-                'status': 'error',
-                'message': f'API request failed with status code {response.status_code}'
+                "status": "error",
+                "message": f"API request failed with status code {response.status_code}",
             }
-    
+
     except Exception as e:
-        return {
-            'status': 'error',
-            'message': f'Error identifying song: {str(e)}'
-        }
+        return {"status": "error", "message": f"Error identifying song: {str(e)}"}
+
 
 def mock_identify_song():
     """
     Mock song identification for development and testing.
-    
+
     Returns:
         dict: Mock song identification result
     """
     # 80% chance of success
     if time.time() % 10 > 2:  # Simple way to randomize
         return {
-            'status': 'success',
-            'title': 'Bohemian Rhapsody',
-            'artist': 'Queen',
-            'youtubeId': 'fJ9rUzIMcZQ',
-            'raw': {
-                'title': 'Bohemian Rhapsody',
-                'artists': [{'name': 'Queen'}],
-                'album': {'name': 'A Night at the Opera'},
-                'external_metadata': {
-                    'youtube': {'vid': 'fJ9rUzIMcZQ'}
-                }
-            }
+            "status": "success",
+            "title": "Bohemian Rhapsody",
+            "artist": "Queen",
+            "youtubeId": "fJ9rUzIMcZQ",
+            "raw": {
+                "title": "Bohemian Rhapsody",
+                "artists": [{"name": "Queen"}],
+                "album": {"name": "A Night at the Opera"},
+                "external_metadata": {"youtube": {"vid": "fJ9rUzIMcZQ"}},
+            },
         }
     else:
         # Simulate error
         return {
-            'status': 'error',
-            'message': 'Could not identify song. Please ensure music is playing clearly.'
-        } 
+            "status": "error",
+            "message": "Could not identify song. Please ensure music is playing clearly.",
+        }
