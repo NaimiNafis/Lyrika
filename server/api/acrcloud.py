@@ -7,12 +7,13 @@ Handles song identification using the ACRCloud API.
 import base64
 import hashlib
 import hmac
+import io
 import json
 import os
+import subprocess
+import tempfile
 import time
 from urllib.parse import urlencode
-
-import requests
 
 # ACRCloud API configuration
 ACR_HOST = os.environ.get("ACRCLOUD_HOST", "identify-ap-southeast-1.acrcloud.com")
@@ -75,6 +76,15 @@ def identify_song_from_audio(audio_data):
 
         # Make request to ACRCloud
         url = f"https://{ACR_HOST}{http_uri}"
+        print(f"Making request to ACRCloud: {url}")
+        print(
+            f"ACR_ACCESS_KEY: {ACR_ACCESS_KEY[:10]}..."
+        )  # Show first 10 chars for debugging
+        print(f"Audio data size: {len(binary_data)} bytes")
+        print(f"Request data: {data}")
+        print(f"String to sign: {string_to_sign}")
+        print(f"Generated signature: {sign}")
+
         response = requests.post(url, files=files, data=data, timeout=ACR_TIMEOUT)
 
         if response.status_code == 200:

@@ -108,7 +108,7 @@ def scrape_lyrics(url):
         url (str): URL of the Genius song page
 
     Returns:
-        str: Lyrics text, or empty string if not found
+        str: Clean lyrics text, or empty string if not found
     """
     try:
         # Send request with user agent
@@ -128,17 +128,52 @@ def scrape_lyrics(url):
                 lyrics_div = soup.find("div", class_="lyrics")
 
             if lyrics_div:
-                # Extract and clean lyrics
+                # Extract lyrics and perform cleaning
+
+                # Remove unwanted elements
+                for unwanted in lyrics_div.select(
+                    ".InlineAnnotation__Container, .ReferentFragmentVariantdesktop__Container"
+                ):
+                    unwanted.decompose()
+
+                # Extract raw lyrics text
                 lyrics = lyrics_div.get_text()
 
                 # Clean up lyrics text
                 lyrics = re.sub(
+                    r"\d+ Contributors.*?Read More", "", lyrics, flags=re.DOTALL
+                )  # Remove contributors, translations etc.
+                lyrics = re.sub(
+                    r"Translations.*?Lyrics", "", lyrics, flags=re.DOTALL
+                )  # Remove translations section
+                lyrics = re.sub(
+                    r"[\w\s]+ Lyrics", "", lyrics
+                )  # Remove "Song Title Lyrics" text
+                lyrics = re.sub(
                     r"\[.*?\]", "", lyrics
                 )  # Remove [Verse], [Chorus], etc.
                 lyrics = re.sub(r"\n{3,}", "\n\n", lyrics)  # Remove excessive newlines
-                lyrics = lyrics.strip()
 
-                return lyrics
+                # Fix capitalization and spacing
+                lyrics = re.sub(
+                    r"([a-z])\n([a-z])", r"\1 \2", lyrics
+                )  # Join words broken across lines
+
+                # Remove leading/trailing whitespace from each line
+                lyrics_lines = [line.strip() for line in lyrics.split("\n")]
+                lyrics = "\n".join(lyrics_lines)
+
+                # Final cleanup of excessive whitespace and blank lines
+                lyrics = re.sub(
+                    r" {2,}", " ", lyrics
+                )  # Replace multiple spaces with single space
+                lyrics = re.sub(r"^\n+", "", lyrics)  # Remove leading blank lines
+                lyrics = re.sub(r"\n+$", "", lyrics)  # Remove trailing blank lines
+                lyrics = re.sub(
+                    r"\n{3,}", "\n\n", lyrics
+                )  # Limit consecutive newlines to 2
+
+                return lyrics.strip()
 
     except Exception as e:
         print(f"Error scraping lyrics: {e}")
