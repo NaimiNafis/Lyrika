@@ -242,6 +242,17 @@ def identify_song_from_audio(audio_data):
                 for i in info:
                     print(f"{i}: {info[i]}")
 
+                # Extract Spotify ID if available
+                spotify_id = None
+                if (
+                    "external_metadata" in music
+                    and "spotify" in music["external_metadata"]
+                    and "track" in music["external_metadata"]["spotify"]
+                ):
+                    spotify_id = music["external_metadata"]["spotify"]["track"].get(
+                        "id"
+                    )
+
                 return {
                     "status": "success",
                     "title": title,
@@ -250,6 +261,7 @@ def identify_song_from_audio(audio_data):
                     "thumbnail": thumbnail,
                     "genius_lyrics_url": genius_lyrics_url,
                     "youtubeId": youtube_id,
+                    "spotifyId": spotify_id,
                     "raw": music,  # Include raw data for debugging/future use
                 }
             else:

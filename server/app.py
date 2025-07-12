@@ -59,10 +59,10 @@ def identify_song():
                 "artist": artist,
                 "lyrics": lyrics_info.get("lyrics", ""),
                 "youtubeId": song_info.get("youtubeId"),
-                # Add enhanced fields from ACRCloud
                 "thumbnail": song_info.get("thumbnail", ""),
                 "artist_url": song_info.get("artist_url", ""),
                 "genius_lyrics_url": song_info.get("genius_lyrics_url", ""),
+                "spotifyId": song_info.get("spotifyId"),
             }
             return jsonify(result)
         else:

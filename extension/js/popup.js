@@ -20,6 +20,7 @@ const artistElem = document.getElementById('artist');
 const lyricsElem = document.getElementById('lyrics');
 const errorMessageElem = document.getElementById('error-message');
 const youtubeLink = document.getElementById('youtube-link');
+const spotifyLink = document.getElementById('spotify-link');
 
 // New DOM elements for enhanced features
 const songThumbnail = document.getElementById('song-thumbnail');
@@ -48,6 +49,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Add click to copy functionality
   songTitleElem.addEventListener('click', copySongInfo);
+
+  //Add event listeners for links
+  youtubeLink.addEventListener('click', openYoutubeLink);
+  spotifyLink.addEventListener('click', openSpotifyLink);
 });
 
 /**
@@ -269,6 +274,13 @@ function displayResults(data) {
     youtubeLink.classList.add('hidden');
   }
 
+  if (data.spotifyId) {
+    spotifyLink.href = `https://open.spotify.com/track/${data.spotifyId}`;
+    spotifyLink.classList.remove('hidden');
+  } else {
+    spotifyLink.classList.add('hidden');
+  }
+
   // Show results state
   showState(resultsState);
 }
@@ -334,6 +346,19 @@ function handleManualSearch() {
   }, handleResponse);
 }
 
+function openYoutubeLink(event) {
+  if (youtubeLink.href) {
+    event.preventDefault();
+    window.open(youtubeLink.href, '_blank', 'noopener');
+  }
+}
+
+function openSpotifyLink(event) {
+  if (spotifyLink.href) {
+    event.preventDefault();
+    window.open(spotifyLink.href, '_blank', 'noopener');
+  }
+}
 /**
  * Copy song info to clipboard
  */
