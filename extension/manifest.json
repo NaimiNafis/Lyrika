@@ -3,7 +3,12 @@
   "name": "Lyrika",
   "version": "1.0.0",
   "description": "Identifies songs playing in your browser and displays lyrics",
-  "permissions": ["tabCapture", "scripting", "storage"],
+  "permissions": [
+    "tabCapture", 
+    "scripting", 
+    "storage", 
+    "activeTab"
+  ],
   "host_permissions": [
     "*://*.acrcloud.com/*", 
     "*://api.genius.com/*",
@@ -19,8 +24,7 @@
     }
   },
   "background": {
-    "service_worker": "js/background.js",
-    "type": "module"
+    "service_worker": "js/background.js"
   },
   "icons": {
     "16": "assets/icons/icon16.png",
