@@ -17,7 +17,7 @@
 
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  width: 350px;
+  width: 400px; /* Increased width to accommodate new features */
   /* min-height: 215px; */
   background-color: var(--background-color);
   color: var(--text-color);
@@ -33,6 +33,12 @@ body {
   width: 20px;
   height: 20px;
   fill: #1DB954;
+}
+
+.bi-music-note-beamed {
+  width: 20px;
+  height: 20px;
+  fill: #FA243C;
 }
 
 .container {
@@ -135,35 +141,97 @@ p{
   100% { height: 10px; }
 }
 
-/* Results state */
+/* Song Info Container with Album Artwork - Spotify-like layout */
+.song-info-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.album-artwork-container {
+  flex-shrink: 0;
+  margin-right: 15px;
+  position: relative;
+}
+
+#album-artwork {
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+#album-artwork:hover {
+  transform: scale(1.05);
+}
+
+/* Song info */
 .song-info {
+  flex-grow: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  margin-bottom: 15px;
   position: relative;
 }
 
 #song-title {
   font-size: 18px;
   margin-bottom: 5px;
-  text-align: center;
+  text-align: left;
   cursor: pointer;
+  font-weight: 700;
 }
 
-#links{
-  display: flex;
-  justify-content: center;
-  gap: 10px;
+#artist {
+  font-size: 14px;
+  color: var(--light-text-color);
   margin-bottom: 10px;
+}
+
+/* Platform links */
+.platform-links {
+  display: flex;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.platform-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #f1f1f1;
+  transition: all 0.2s ease;
+}
+
+.platform-link:hover {
+  transform: scale(1.1);
+}
+
+.youtube-link:hover {
+  background-color: rgba(255, 0, 0, 0.1);
+}
+
+.spotify-link:hover {
+  background-color: rgba(29, 185, 84, 0.1);
+}
+
+.apple-music-link:hover {
+  background-color: rgba(250, 36, 60, 0.1);
 }
 
 #song-title:hover::after {
   content: 'Copy to clipboard';
   position: absolute;
   top: -25px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
   font-size: 12px;
   background-color: rgba(0, 0, 0, 0.7);
   color: white;
@@ -175,8 +243,7 @@ p{
   content: 'Copied!';
   position: absolute;
   top: -25px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
   font-size: 12px;
   background-color: var(--secondary-color);
   color: white;
@@ -185,19 +252,21 @@ p{
   font-weight: bold;
 }
 
-#artist {
+/* Tab Navigation Styles */
+.nav-tabs .nav-link {
+  color: var(--text-color);
   font-size: 14px;
-  color: var(--light-text-color);
+  padding: 6px 12px;
+}
+
+.nav-tabs .nav-link.active {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+/* Lyrics Container */
+.lyrics-header {
   margin-bottom: 10px;
-}
-
-.youtube-icon {
-  text-decoration: none;
-}
-
-.youtube-icon img {
-  width: 24px;
-  height: 24px;
 }
 
 .lyrics-container {
@@ -205,7 +274,7 @@ p{
   overflow-y: auto;
   border: 1px solid var(--border-color);
   border-radius: 10px;
-  padding: 10%;
+  padding: 15px;
   background-color: white;
   margin-bottom: 15px;
   resize: vertical;
@@ -219,8 +288,79 @@ p{
 
 #lyrics {
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.6;
   white-space: pre-wrap;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Meaning Container */
+.meaning-container {
+  height: 250px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 15px;
+  background-color: white;
+  margin-bottom: 15px;
+}
+
+#meaning-placeholder {
+  text-align: center;
+  padding: 30px 0;
+}
+
+#meaning-text {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Recommendations Container */
+.recommendations-container {
+  height: 250px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 15px;
+  background-color: white;
+  margin-bottom: 15px;
+}
+
+#recommendations-placeholder {
+  text-align: center;
+  padding: 30px 0;
+}
+
+.recommendation-item {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.recommendation-item:last-child {
+  border-bottom: none;
+}
+
+.recommendation-title {
+  font-weight: bold;
+  margin-bottom: 0;
+}
+
+.recommendation-artist {
+  font-size: 13px;
+  color: var(--light-text-color);
+}
+
+.recommendation-reason {
+  font-style: italic;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+/* Loading states */
+.spinner-border {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-width: 0.2em;
 }
 
 /* Error state */

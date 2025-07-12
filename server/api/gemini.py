@@ -10,17 +10,22 @@ Handles AI-powered features using Google's Gemini API:
 
 import os
 import logging
+from dotenv import load_dotenv
 import google.generativeai as genai
 from typing import Dict, List, Any, Optional
+import re # Added for post-processing of lyrics
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, 
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger('gemini_api')
 
+# Load environment variables
+load_dotenv()
+
 # Gemini API configuration
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
-MODEL_NAME = "gemini-1.5-pro"  # Using the most capable model
+MODEL_NAME = "gemini-2.0-flash"  # Updated to use gemini-2.0-flash model
 
 # Configure the Gemini API
 if GEMINI_API_KEY:
@@ -31,7 +36,20 @@ else:
 
 def is_configured() -> bool:
     """Check if Gemini API is configured properly"""
-    configured = bool(GEMINI_API_KEY)
+    # Reload environment variables to ensure we have the latest
+    load_dotenv()
+    
+    # Re-check the API key
+    api_key = os.environ.get("GEMINI_API_KEY", "")
+    configured = bool(api_key)
+    
+    # If we have an API key but GEMINI_API_KEY is empty, update it
+    global GEMINI_API_KEY
+    if configured and not GEMINI_API_KEY:
+        GEMINI_API_KEY = api_key
+        logger.info("Updated GEMINI_API_KEY from environment")
+        genai.configure(api_key=GEMINI_API_KEY)
+    
     logger.info(f"Gemini API configured: {configured}")
     return configured
 
@@ -63,6 +81,13 @@ def get_lyrics_by_gemini(title: str, artist: str) -> Dict[str, Any]:
         3. Do not include any explanations, notes, or comments
         4. If you don't know the exact lyrics, please state "I don't have the complete lyrics for this song" instead of making them up
         5. Preserve any stylistic elements like capitalization or punctuation as they appear in the original lyrics
+        6. Ensure proper line breaks:
+           - Each new line of the song should be on its own line
+           - Maintain a blank line between verses/sections
+           - Don't break a single line of lyrics into multiple lines
+           - Join words that should be on the same line
+           - Don't add section labels like [Verse] or [Chorus]
+        7. Maintain consistent formatting throughout the lyrics
         """
         
         # Generate the lyrics using Gemini
@@ -83,6 +108,11 @@ def get_lyrics_by_gemini(title: str, artist: str) -> Dict[str, Any]:
                     "artist": artist,
                     "api_used": "gemini_no_lyrics"
                 }
+            
+            # Additional post-processing to ensure consistent formatting
+            # Remove any extraneous text or section labels Gemini might have added
+            lyrics_text = re.sub(r'\[.*?\]', '', lyrics_text)  # Remove [Verse], [Chorus], etc.
+            lyrics_text = re.sub(r'^"(.*)"$', r'\1', lyrics_text)  # Remove enclosing quotes if present
             
             logger.info("Successfully received lyrics from Gemini API")
             return {
@@ -142,6 +172,12 @@ def translate_lyrics(lyrics: str, source_lang: str = "auto", target_lang: str = 
         2. Maintain the musicality and flow where possible
         3. Focus on conveying the meaning rather than literal translation
         4. Do not add explanations or notes - just provide the translated lyrics
+        5. Ensure proper line breaks:
+           - Each line in the original should correspond to a line in the translation
+           - Preserve blank lines between verses/sections exactly as in the original
+           - Don't add or remove line breaks from the original structure
+        6. Do not add section labels like [Verse] or [Chorus]
+        7. Only output the translated lyrics, nothing else
         """
         
         # Generate the translation using Gemini
@@ -150,11 +186,17 @@ def translate_lyrics(lyrics: str, source_lang: str = "auto", target_lang: str = 
         response = model.generate_content(prompt)
         
         if response and response.text:
+            translated_lyrics = response.text.strip()
+            
+            # Additional post-processing
+            translated_lyrics = re.sub(r'\[.*?\]', '', translated_lyrics)  # Remove any section labels
+            translated_lyrics = re.sub(r'^"(.*)"$', r'\1', translated_lyrics)  # Remove enclosing quotes if present
+            
             logger.info("Successfully received translation from Gemini API")
             return {
                 "status": "success",
                 "original_lyrics": lyrics,
-                "translated_lyrics": response.text.strip(),
+                "translated_lyrics": translated_lyrics,
                 "source_language": source_lang,
                 "target_language": target_lang,
                 "api_used": "gemini"
@@ -190,11 +232,21 @@ def explain_song_meaning(title: str, artist: str, lyrics: str) -> Dict[str, Any]
         dict: Song meaning analysis
     """
     try:
+        # First check if API key is available
+        if not GEMINI_API_KEY:
+            logger.error("GEMINI_API_KEY is empty or not set")
+            return {
+                "status": "error",
+                "message": "Gemini API key is not configured",
+                "api_used": "none"
+            }
+            
         if not is_configured():
             logger.warning(f"Using mock song meaning explanation for '{title}' by '{artist}'")
             return mock_explain_song_meaning(title, artist)
         
         logger.info(f"Calling Gemini API for song meaning: '{title}' by '{artist}'")
+        logger.info(f"Using API key: {GEMINI_API_KEY[:4]}... (length: {len(GEMINI_API_KEY)})")
         
         # Create the prompt for song meaning analysis
         prompt = f"""
@@ -212,27 +264,40 @@ def explain_song_meaning(title: str, artist: str, lyrics: str) -> Dict[str, Any]
         """
         
         # Generate the analysis using Gemini
-        model = genai.GenerativeModel(MODEL_NAME)
-        logger.info(f"Sending song meaning request to Gemini model: {MODEL_NAME}")
-        response = model.generate_content(prompt)
-        
-        if response and response.text:
-            logger.info("Successfully received song meaning analysis from Gemini API")
-            return {
-                "status": "success",
-                "title": title,
-                "artist": artist,
-                "meaning": response.text.strip(),
-                "api_used": "gemini"
-            }
-        else:
-            logger.error("Gemini API returned empty response for song meaning")
+        try:
+            # Reconfigure the API just to be sure
+            genai.configure(api_key=GEMINI_API_KEY)
+            
+            model = genai.GenerativeModel(MODEL_NAME)
+            logger.info(f"Sending song meaning request to Gemini model: {MODEL_NAME}")
+            response = model.generate_content(prompt)
+            
+            if response and response.text:
+                logger.info("Successfully received song meaning analysis from Gemini API")
+                return {
+                    "status": "success",
+                    "title": title,
+                    "artist": artist,
+                    "meaning": response.text.strip(),
+                    "api_used": "gemini"
+                }
+            else:
+                logger.error("Gemini API returned empty response for song meaning")
+                return {
+                    "status": "error",
+                    "message": "Failed to analyze song meaning",
+                    "title": title,
+                    "artist": artist,
+                    "api_used": "gemini_failed"
+                }
+        except Exception as inner_e:
+            logger.exception(f"Inner exception in Gemini API call: {str(inner_e)}")
             return {
                 "status": "error",
-                "message": "Failed to analyze song meaning",
+                "message": f"Error analyzing song meaning: {str(inner_e)}",
                 "title": title,
                 "artist": artist,
-                "api_used": "gemini_failed"
+                "api_used": "gemini_error"
             }
     
     except Exception as e:
@@ -346,6 +411,93 @@ def get_similar_songs(title: str, artist: str, lyrics: str) -> Dict[str, Any]:
             "title": title,
             "artist": artist,
             "api_used": "gemini_error"
+        }
+
+def format_lyrics_with_gemini(raw_lyrics: str, title: str = "", artist: str = "") -> Dict[str, Any]:
+    """
+    Use Gemini to standardize and format lyrics that were scraped from Genius or other sources.
+    
+    Args:
+        raw_lyrics (str): The raw lyrics text to format
+        title (str, optional): Song title for context
+        artist (str, optional): Artist name for context
+        
+    Returns:
+        dict: Formatted lyrics result
+    """
+    try:
+        if not is_configured():
+            logger.warning("Gemini not configured, returning original lyrics")
+            return {
+                "status": "error",
+                "message": "Gemini API not configured",
+                "lyrics": raw_lyrics
+            }
+            
+        logger.info(f"Using Gemini to format lyrics for '{title}' by '{artist}'")
+        
+        context = ""
+        if title:
+            context += f" for '{title}'"
+            if artist:
+                context += f" by '{artist}'"
+        
+        # Create prompt for formatting lyrics
+        prompt = f"""
+        Format and standardize these song lyrics{context}. 
+        
+        Raw lyrics:
+        {raw_lyrics}
+        
+        Instructions:
+        1. Keep the EXACT SAME LYRICS, just fix the formatting
+        2. Ensure proper line breaks for each line of the song
+        3. Group lines into appropriate verses with blank lines between verses
+        4. Remove any section headers like [Verse], [Chorus], etc.
+        5. Fix any obvious formatting errors (like split words that should be together)
+        6. Preserve capitalization and punctuation as in the original lyrics
+        7. Remove any non-lyric content (credits, contributors, etc.)
+        8. Return ONLY the formatted lyrics, nothing else
+        
+        Properly formatted lyrics:
+        """
+        
+        # Use Gemini to format the lyrics
+        model = genai.GenerativeModel(MODEL_NAME)
+        logger.info(f"Sending formatting request to Gemini model: {MODEL_NAME}")
+        response = model.generate_content(prompt)
+        
+        if response and response.text:
+            formatted_lyrics = response.text.strip()
+            
+            # Check if Gemini returned error message
+            if len(formatted_lyrics) < 10 or "error" in formatted_lyrics.lower():
+                logger.warning("Gemini returned very short response or error")
+                return {
+                    "status": "error",
+                    "message": "Failed to format lyrics properly",
+                    "lyrics": raw_lyrics
+                }
+                
+            logger.info("Successfully formatted lyrics with Gemini")
+            return {
+                "status": "success",
+                "lyrics": formatted_lyrics
+            }
+        else:
+            logger.error("Gemini API returned empty response for lyrics formatting")
+            return {
+                "status": "error",
+                "message": "Empty response from Gemini",
+                "lyrics": raw_lyrics
+            }
+    
+    except Exception as e:
+        logger.exception(f"Error in Gemini lyrics formatting: {str(e)}")
+        return {
+            "status": "error",
+            "message": f"Error formatting lyrics: {str(e)}",
+            "lyrics": raw_lyrics
         }
 
 # Mock responses for development when API key is not available

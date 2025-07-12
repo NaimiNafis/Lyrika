@@ -133,7 +133,8 @@ def get_lyrics():
         
         # Check if Genius returned lyrics
         lyrics = lyrics_info.get('lyrics', '')
-        lyrics_source = 'genius'
+        lyrics_source = lyrics_info.get('lyrics_source', 'genius')
+        formatting_source = lyrics_info.get('formatting', 'basic')
         
         # If Genius didn't return lyrics, try Gemini as a fallback
         if not lyrics or lyrics.strip() == '':
@@ -144,12 +145,14 @@ def get_lyrics():
                 # Replace the Genius response with Gemini's
                 lyrics_info = gemini_lyrics_info
                 lyrics_info['lyrics_source'] = 'gemini'
+                lyrics_info['formatting'] = 'gemini'
                 logger.info(f"Successfully retrieved lyrics from Gemini API for '{title}' by '{artist}'")
             else:
                 logger.warning(f"Gemini API also couldn't find lyrics for '{title}' by '{artist}'")
                 lyrics_info['lyrics_source'] = 'none'
         else:
-            lyrics_info['lyrics_source'] = 'genius'
+            lyrics_info['lyrics_source'] = lyrics_source
+            lyrics_info['formatting'] = formatting_source
             
         return jsonify(lyrics_info)
     except Exception as e:

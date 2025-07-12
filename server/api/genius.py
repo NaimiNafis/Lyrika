@@ -45,14 +45,39 @@ def get_lyrics_by_song(title, artist=""):
 
         # Fetch and extract lyrics
         if song_url:
-            lyrics = scrape_lyrics(song_url)
-            if lyrics:
+            raw_lyrics = scrape_lyrics(song_url)
+            if raw_lyrics:
+                # Try to clean up the lyrics using Gemini if available
+                try:
+                    from api.gemini import format_lyrics_with_gemini, is_configured
+                    
+                    if is_configured():
+                        print(f"Using Gemini to format lyrics for {title} by {artist}")
+                        formatted_result = format_lyrics_with_gemini(raw_lyrics, title, artist)
+                        
+                        # If Gemini formatting was successful, use those lyrics
+                        if formatted_result and formatted_result.get("status") == "success":
+                            lyrics = formatted_result.get("lyrics", raw_lyrics)
+                            return {
+                                "status": "success",
+                                "title": title,
+                                "artist": artist,
+                                "lyrics": lyrics,
+                                "source_url": song_url,
+                                "formatting": "gemini"
+                            }
+                except Exception as formatting_error:
+                    print(f"Error using Gemini for formatting: {formatting_error}")
+                    # Continue with original lyrics if Gemini formatting fails
+
+                # Return original lyrics if Gemini formatting wasn't available or failed
                 return {
                     "status": "success",
                     "title": title,
                     "artist": artist,
-                    "lyrics": lyrics,
+                    "lyrics": raw_lyrics,
                     "source_url": song_url,
+                    "formatting": "basic"
                 }
 
         # If we get here, we couldn't find lyrics
@@ -142,10 +167,28 @@ def scrape_lyrics(url):
                 lyrics = re.sub(r'Translations.*?Lyrics', '', lyrics, flags=re.DOTALL)  # Remove translations section
                 lyrics = re.sub(r'[\w\s]+ Lyrics', '', lyrics)  # Remove "Song Title Lyrics" text
                 lyrics = re.sub(r'\[.*?\]', '', lyrics)  # Remove [Verse], [Chorus], etc.
-                lyrics = re.sub(r'\n{3,}', '\n\n', lyrics)  # Remove excessive newlines
                 
-                # Fix capitalization and spacing
-                lyrics = re.sub(r'([a-z])\n([a-z])', r'\1 \2', lyrics)  # Join words broken across lines
+                # More aggressive cleaning of undesirable elements
+                lyrics = re.sub(r'Embed$', '', lyrics, flags=re.MULTILINE)  # Remove "Embed" text
+                lyrics = re.sub(r'Share URL$', '', lyrics, flags=re.MULTILINE)  # Remove "Share URL" text
+                lyrics = re.sub(r'Copy$', '', lyrics, flags=re.MULTILINE)  # Remove "Copy" text
+                
+                # Fix line breaks issues
+                
+                # Step 1: Normalize all line breaks
+                lyrics = re.sub(r'\r\n', '\n', lyrics)
+                
+                # Step 2: Join words broken across lines (lowercase to lowercase)
+                lyrics = re.sub(r'([a-z])[\s]*\n[\s]*([a-z])', r'\1 \2', lyrics)
+                
+                # Step 3: Ensure proper spacing around punctuation
+                lyrics = re.sub(r'([.,;:!?])[\s]*\n', r'\1\n', lyrics)
+                
+                # Step 4: Preserve intentional line breaks after punctuation
+                lyrics = re.sub(r'([.,;:!?])[\s]*([A-Z])', r'\1\n\2', lyrics)
+                
+                # Step 5: Remove excess blank lines but preserve verse structure
+                lyrics = re.sub(r'\n{3,}', '\n\n', lyrics)
                 
                 # Remove leading/trailing whitespace from each line
                 lyrics_lines = [line.strip() for line in lyrics.split('\n')]
@@ -155,7 +198,6 @@ def scrape_lyrics(url):
                 lyrics = re.sub(r' {2,}', ' ', lyrics)  # Replace multiple spaces with single space
                 lyrics = re.sub(r'^\n+', '', lyrics)  # Remove leading blank lines
                 lyrics = re.sub(r'\n+$', '', lyrics)  # Remove trailing blank lines
-                lyrics = re.sub(r'\n{3,}', '\n\n', lyrics)  # Limit consecutive newlines to 2
                 
                 return lyrics.strip()
 
