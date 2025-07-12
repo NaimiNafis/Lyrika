@@ -15,6 +15,8 @@ import tempfile
 import time
 from urllib.parse import urlencode
 
+import requests
+
 # ACRCloud API configuration
 ACR_HOST = os.environ.get("ACRCLOUD_HOST", "identify-ap-southeast-1.acrcloud.com")
 ACR_ACCESS_KEY = os.environ.get("ACRCLOUD_ACCESS_KEY", "")
