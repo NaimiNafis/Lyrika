@@ -10,7 +10,10 @@
 <body>
   <div class="container">
     <header>
-      <h1>LYRIKA</h1>
+      <div class="logo-container">
+        <img src="assets/icons/icon48.png" alt="Lyrika Logo" class="header-logo">
+        <h1>LYRIKA</h1>
+      </div>
     </header>
 
     <!-- Initial State -->
@@ -137,8 +140,14 @@
             <p>Couldn't identify the song?</p>
             <p>Enter details manually:</p>
             <div class="manual-search-form">
-              <input type="text" id="manual-song" placeholder="Song Title">
-              <input type="text" id="manual-artist" placeholder="Artist">
+              <div class="custom-input-group">
+                <input type="text" id="manual-song" placeholder="Song Title">
+                <div id="song-error" class="error-message hidden">Please enter a song title</div>
+              </div>
+              <div class="custom-input-group">
+                <input type="text" id="manual-artist" placeholder="Artist">
+                <div id="artist-error" class="error-message hidden">Please enter an artist name</div>
+              </div>
               <button id="manual-search" class="primary-button">Search Lyrics</button>
             </div>
             <div id="search-loading" class="text-center p-3 hidden">

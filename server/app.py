@@ -141,8 +141,8 @@ def get_lyrics():
         lyrics_source = lyrics_info.get('lyrics_source', 'genius')
         formatting_source = lyrics_info.get('formatting', 'basic')
         
-        # If Genius didn't return lyrics, try Gemini as a fallback
-        if not lyrics or lyrics.strip() == '':
+        # If Genius didn't return lyrics or returned an error, try Gemini as a fallback
+        if not lyrics or lyrics.strip() == '' or lyrics_info.get('status') == 'error':
             logger.info(f"No lyrics found from Genius for '{title}' by '{artist}', trying Gemini API")
             gemini_lyrics_info = get_lyrics_by_gemini(title, artist)
             

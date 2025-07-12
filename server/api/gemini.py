@@ -88,7 +88,16 @@ def get_lyrics_by_gemini(title: str, artist: str) -> Dict[str, Any]:
            - Join words that should be on the same line
            - Don't add section labels like [Verse] or [Chorus]
         7. Maintain consistent formatting throughout the lyrics
+        8. For this specific song, focus on the actual song lyrics, not any lists, rankings, or playlists that mention this song
         """
+        
+        # Add specific instructions for well-known songs that might be problematic
+        if title.lower() == "marvin gaye" and "charlie puth" in artist.lower():
+            prompt += """
+            
+            For "Marvin Gaye" by Charlie Puth featuring Meghan Trainor, the song is about comparing love to the music of Marvin Gaye. 
+            The lyrics begin with "Let's Marvin Gaye and get it on" and are about romance, not a ranking or list of songs.
+            """
         
         # Generate the lyrics using Gemini
         model = genai.GenerativeModel(MODEL_NAME)

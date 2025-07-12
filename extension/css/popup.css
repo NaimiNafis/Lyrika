@@ -16,6 +16,21 @@
   padding: 0;
 }
 
+/* Main popup scrollbar styling */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: #333333;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #FFFFFF;
+  border-radius: 10px;
+}
+
 body {
   font-family: 'Montserrat', sans-serif;
   width: 400px; /* Increased width to accommodate new features */
@@ -53,11 +68,26 @@ header {
   border-bottom: 1px solid var(--border-color);
 }
 
+/* Logo and title styling */
+.logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.header-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 10%;
+}
+
 h1 {
   font-size: 24px;
   font-weight: 700;
   color: var(--primary-color);
   letter-spacing: 1px;
+  margin: 0;
 }
 
 /* Button styles */
@@ -321,6 +351,7 @@ p {
   margin-bottom: 16px;
 }
 
+/* Override scrollbar style for lyrics container */
 .lyrics-container::-webkit-scrollbar {
   width: 4px;
 }
@@ -355,6 +386,7 @@ p {
   padding-right: 8px;
 }
 
+/* Override scrollbar style for recommendations container */
 .recommendations-container::-webkit-scrollbar {
   width: 4px;
 }
@@ -426,13 +458,34 @@ p {
   margin: 15px 0;
 }
 
+.custom-input-group {
+  position: relative;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
 .manual-search-form input {
   padding: 10px 14px;
   border: 1px solid var(--border-color);
-  border-radius: 500px;
+  border-radius: 500px !important; /* Force border-radius */
   font-size: 14px;
   background-color: #333333;
   color: var(--text-color);
+  width: 100%;
+  display: block; /* Ensure the input takes full width */
+  -webkit-appearance: none; /* Remove default styling on iOS */
+  -moz-appearance: none; /* Remove default styling on Firefox */
+  appearance: none; /* Standard property for removing default styling */
+}
+
+/* Override any Bootstrap styles that might be affecting the border-radius */
+.manual-search-form .form-control,
+.manual-search-form input.form-control {
+  border-radius: 500px !important;
+}
+
+.manual-search-form input.error {
+  border-color: var(--error-color);
 }
 
 .manual-search-form input::placeholder {
@@ -443,6 +496,13 @@ p {
   outline: none;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 2px rgba(255, 252, 0, 0.5);
+}
+
+.error-message {
+  color: var(--error-color);
+  font-size: 12px;
+  margin-top: 4px;
+  margin-left: 14px;
 }
 
 #search-loading {

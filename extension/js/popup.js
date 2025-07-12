@@ -786,8 +786,29 @@ function handleManualSearch() {
   const songTitle = document.getElementById('manual-song').value.trim();
   const artist = document.getElementById('manual-artist').value.trim();
   
+  // Reset previous error states
+  document.getElementById('manual-song').classList.remove('error');
+  document.getElementById('manual-artist').classList.remove('error');
+  document.getElementById('song-error').classList.add('hidden');
+  document.getElementById('artist-error').classList.add('hidden');
+  
+  // Validate inputs
+  let hasError = false;
+  
   if (!songTitle) {
-    alert('Please enter a song title');
+    document.getElementById('manual-song').classList.add('error');
+    document.getElementById('song-error').classList.remove('hidden');
+    hasError = true;
+  }
+  
+  if (!artist) {
+    document.getElementById('manual-artist').classList.add('error');
+    document.getElementById('artist-error').classList.remove('hidden');
+    hasError = true;
+  }
+  
+  // Don't proceed if there are validation errors
+  if (hasError) {
     return;
   }
   
