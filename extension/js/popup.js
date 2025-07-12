@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
   tryAgainBtn.addEventListener('click', resetToInitialState);
   backButton.addEventListener('click', resetToInitialState);
   manualSearchBtn.addEventListener('click', handleManualSearch);
-  
+
   // Add click to copy functionality
   songTitleElem.addEventListener('click', copySongInfo);
 
@@ -77,7 +77,7 @@ function startListening() {
     console.log('Already processing audio');
     return;
   }
-  
+
   isProcessing = true;
   showState(listeningState);
   clearTimeout(manualFallbackTimer);
@@ -90,16 +90,16 @@ function startListening() {
       searchTabElement.click();
     }
   }, 7000);
-  
+
   // Get streamId from background script
   chrome.runtime.sendMessage({ action: 'startListening' }, async (response) => {
     console.log('Received streamId response:', response);
-    
+
     if (response.status === 'error' || !response.streamId) {
       displayError(response.message || "Couldn't access tab audio");
       return;
     }
-    
+
     try {
       // Use the streamId to create a MediaStream
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -111,7 +111,7 @@ function startListening() {
         },
         video: false
       });
-      
+
       // Start recording
       captureAudio(stream);
     } catch (error) {
@@ -131,43 +131,43 @@ function captureAudio(stream) {
     const source = audioCtx.createMediaStreamSource(stream);
     const dest = audioCtx.createMediaStreamDestination();
     source.connect(dest);
-    
+
     // Set up MediaRecorder
     mediaRecorder = new MediaRecorder(dest.stream);
     audioChunks = [];
-    
+
     // Handle data availability
     mediaRecorder.ondataavailable = (event) => {
       if (event.data.size > 0) {
         audioChunks.push(event.data);
       }
     };
-    
+
     // When recording stops
     mediaRecorder.onstop = async () => {
       try {
         // Create blob from chunks
         const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        
+
         // Convert to base64
         const base64Data = await blobToBase64(audioBlob);
-        
+
         console.log('Audio captured successfully, sending to server...');
-        
+
         // Stop all tracks
         stream.getTracks().forEach(track => track.stop());
-        
+
         // Send to background for processing
-        chrome.runtime.sendMessage({ 
-          action: 'sendAudioToServer', 
-          audioData: base64Data 
+        chrome.runtime.sendMessage({
+          action: 'sendAudioToServer',
+          audioData: base64Data
         }, handleResponse);
       } catch (error) {
         console.error('Error processing audio:', error);
         displayError('Error processing audio: ' + error.message);
       }
     };
-    
+
     // Start recording
     mediaRecorder.start();
     
@@ -205,9 +205,9 @@ function blobToBase64(blob) {
 function handleResponse(response) {
   clearTimeout(manualFallbackTimer);
   isProcessing = false;
-  
+
   console.log('Received response:', response);
-  
+
   if (response.status === 'success') {
     displayResults(response);
   } else {
@@ -267,7 +267,11 @@ function displayResults(data) {
   // Populate UI elements with data
   songTitleElem.textContent = data.title;
   artistElem.textContent = data.artist;
-  
+
+  // These sections are no longer needed as the UI has been redesigned
+  // The new UI uses albumArtworkElem instead of songThumbnail
+  // and direct links to platforms instead of artist/lyrics links
+
   // Handle lyrics
   if (data.lyrics && data.lyrics.trim()) {
     // Format lyrics using the shared formatting function
@@ -277,7 +281,7 @@ function displayResults(data) {
     originalLyrics = cleanLyrics;
     
     lyricsElem.textContent = cleanLyrics;
-    
+
     // Add scrolling to the lyrics container if content is long
     const lyricsContainer = document.querySelector('.lyrics-container');
     if (lyricsContainer && cleanLyrics.split('\n').length > 10) {
@@ -888,7 +892,7 @@ function openAppleMusicLink(event) {
  */
 function copySongInfo() {
   const songInfo = `${songTitleElem.textContent} by ${artistElem.textContent}`;
-  
+
   navigator.clipboard.writeText(songInfo)
     .then(() => {
       // Show "Copied!" feedback
@@ -911,7 +915,7 @@ function showState(stateToShow) {
   listeningState.classList.add('hidden');
   resultsState.classList.add('hidden');
   errorState.classList.add('hidden');
-  
+
   // Show the requested state
   stateToShow.classList.remove('hidden');
 }

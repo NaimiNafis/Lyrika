@@ -247,11 +247,13 @@ def scrape_lyrics(url):
 
             if lyrics_div:
                 # Extract lyrics and perform cleaning
-                
+
                 # Remove unwanted elements
-                for unwanted in lyrics_div.select('.InlineAnnotation__Container, .ReferentFragmentVariantdesktop__Container'):
+                for unwanted in lyrics_div.select(
+                    ".InlineAnnotation__Container, .ReferentFragmentVariantdesktop__Container"
+                ):
                     unwanted.decompose()
-                
+
                 # Extract raw lyrics text
                 lyrics = lyrics_div.get_text()
 
@@ -284,15 +286,17 @@ def scrape_lyrics(url):
                 lyrics = re.sub(r'\n{3,}', '\n\n', lyrics)
                 
                 # Remove leading/trailing whitespace from each line
-                lyrics_lines = [line.strip() for line in lyrics.split('\n')]
-                lyrics = '\n'.join(lyrics_lines)
-                
+                lyrics_lines = [line.strip() for line in lyrics.split("\n")]
+                lyrics = "\n".join(lyrics_lines)
+
                 # Final cleanup of excessive whitespace and blank lines
                 lyrics = re.sub(r' {2,}', ' ', lyrics)  # Replace multiple spaces with single space
                 lyrics = re.sub(r'^\n+', '', lyrics)  # Remove leading blank lines
                 lyrics = re.sub(r'\n+$', '', lyrics)  # Remove trailing blank lines
+                lyrics = re.sub(r'\n{3,}', '\n\n', lyrics)  # Limit consecutive newlines to 2
                 
                 return lyrics.strip()
+
 
     except Exception as e:
         print(f"Error scraping lyrics: {e}")

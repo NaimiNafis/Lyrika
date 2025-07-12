@@ -4,10 +4,10 @@ Lyrika Server
 Flask application serving as backend for the Lyrika browser extension.
 """
 
-from flask import Flask, request, jsonify
-from flask_cors import CORS
 import os
 import logging
+from flask import Flask, jsonify, request
+from flask_cors import CORS
 from dotenv import load_dotenv
 from api.acrcloud import identify_song_from_audio
 from api.genius import get_lyrics_by_song
@@ -24,7 +24,8 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)  # Enable Cross-Origin Resource Sharing
 
-@app.route('/api/health', methods=['GET'])
+
+@app.route("/api/health", methods=["GET"])
 def health_check():
     """Simple health check endpoint."""
     gemini_status = "available" if gemini_configured() else "unavailable"
@@ -36,35 +37,29 @@ def health_check():
         'gemini_status': gemini_status
     })
 
-@app.route('/api/identify', methods=['POST'])
+@app.route("/api/identify", methods=["POST"])
 def identify_song():
     """
     Identify a song from audio data sent by the extension.
-    
+
     Expected request format:
     - audio_data: Base64 encoded audio data (required)
     """
     if not request.is_json:
-        return jsonify({
-            'status': 'error',
-            'message': 'Request must be JSON'
-        }), 400
-    
+        return jsonify({"status": "error", "message": "Request must be JSON"}), 400
+
     data = request.json
-    audio_data = data.get('audio_data')
-    
+    audio_data = data.get("audio_data")
+
     if not audio_data:
-        return jsonify({
-            'status': 'error',
-            'message': 'Missing audio data'
-        }), 400
-    
+        return jsonify({"status": "error", "message": "Missing audio data"}), 400
+
     try:
         # Identify the song using ACRCloud
         logger.info("Identifying song using ACRCloud")
         song_info = identify_song_from_audio(audio_data)
-        
-        if song_info['status'] == 'success':
+
+        if song_info["status"] == "success":
             # Get lyrics from Genius
             title = song_info.get('title')
             artist = song_info.get('artist')
@@ -106,7 +101,7 @@ def identify_song():
         else:
             logger.warning(f"Failed to identify song: {song_info.get('message', 'Unknown error')}")
             return jsonify(song_info)
-        
+
     except Exception as e:
         logger.exception(f"Error in song identification: {str(e)}")
         return jsonify({
@@ -114,24 +109,21 @@ def identify_song():
             'message': f'Failed to process audio: {str(e)}'
         }), 500
 
-@app.route('/api/lyrics', methods=['GET'])
+@app.route("/api/lyrics", methods=["GET"])
 def get_lyrics():
     """
     Get lyrics for a song by title and artist.
-    
+
     Expected query parameters:
     - title: Song title (required)
     - artist: Artist name (optional)
     """
-    title = request.args.get('title')
-    artist = request.args.get('artist', '')
-    
+    title = request.args.get("title")
+    artist = request.args.get("artist", "")
+    print(f"Fetching lyrics for {title} by {artist}")
     if not title:
-        return jsonify({
-            'status': 'error',
-            'message': 'Missing song title'
-        }), 400
-    
+        return jsonify({"status": "error", "message": "Missing song title"}), 400
+
     try:
         logger.info(f"Fetching lyrics for '{title}' by '{artist}' from Genius")
         lyrics_info = get_lyrics_by_song(title, artist)
