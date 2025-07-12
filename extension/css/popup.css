@@ -111,7 +111,7 @@ button {
   margin: 20px 0;
 }
 
-p{
+p {
   margin-bottom: 0;
 }
 
@@ -170,7 +170,7 @@ p{
   cursor: pointer;
 }
 
-#links{
+#links {
   display: flex;
   justify-content: center;
   gap: 10px;
@@ -210,17 +210,59 @@ p{
   margin-bottom: 10px;
 }
 
+#song-thumbnail {
+  width: 120px;
+  height: 120px;
+  margin-bottom: 10px;
+}
 
+.youtube-icon {
+  text-decoration: none;
+}
+
+.youtube-icon img {
+  width: 24px;
+  height: 24px;
+}
 
 .lyrics-container {
   height: 250px;
-  overflow-y: auto;
+  overflow-y: scroll;
   border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 10%;
   background-color: white;
   margin-bottom: 15px;
   resize: vertical;
+  scrollbar-width: none;
+}
+
+.lyrics-container.scrollable {
+  max-height: 250px;
+  overflow-y: scroll;
+  scrollbar-width: none;
+}
+
+/* Webkit scrollbar styles for all lyrics containers */
+.lyrics-container::-webkit-scrollbar,
+.lyrics-container.scrollable::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+.lyrics-container::-webkit-scrollbar-track,
+.lyrics-container.scrollable::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.lyrics-container::-webkit-scrollbar-thumb,
+.lyrics-container.scrollable::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+.lyrics-container::-webkit-scrollbar-button,
+.lyrics-container.scrollable::-webkit-scrollbar-button {
+  display: none;
 }
 
 .lyrics-container h3 {
@@ -271,38 +313,4 @@ footer {
   text-align: center;
   font-size: 12px;
   color: var(--light-text-color);
-}
-
-/* Enhanced features - minimal styling */
-.song-thumbnail {
-  width: 100px;
-  height: 100px;
-  border-radius: 4px;
-  margin: 10px auto;
-  display: block;
-}
-
-.artist-link,
-.lyrics-link,
-.youtube-icon {
-  display: inline-block;
-  padding: 8px;
-  margin: 5px;
-  background: #4a86e8;
-  color: white;
-  text-decoration: none;
-  border-radius: 4px;
-  font-size: 12px;
-}
-
-.artist-link:hover,
-.lyrics-link:hover,
-.youtube-icon:hover {
-  background: #3b78d8;
-}
-
-.button-icon {
-  width: 20px;
-  height: 20px;
-  display: block;
 }

@@ -21,8 +21,6 @@ const lyricsElem = document.getElementById('lyrics');
 const errorMessageElem = document.getElementById('error-message');
 const youtubeLink = document.getElementById('youtube-link');
 const spotifyLink = document.getElementById('spotify-link');
-
-// New DOM elements for enhanced features
 const songThumbnail = document.getElementById('song-thumbnail');
 const artistLink = document.getElementById('artist-link');
 const lyricsLink = document.getElementById('lyrics-link');
@@ -211,36 +209,34 @@ function displayResults(data) {
   songTitleElem.textContent = data.title;
   artistElem.textContent = data.artist;
 
-  // Handle thumbnail image
-  if (data.thumbnail && songThumbnail) {
-    songThumbnail.src = data.thumbnail;
-    songThumbnail.classList.remove('hidden');
-  } else if (songThumbnail) {
-    songThumbnail.classList.add('hidden');
+  // Handle thumbnail image - always show for testing
+  if (songThumbnail) {
+    if (data.thumbnail) {
+      songThumbnail.src = data.thumbnail;
+    } else {
+      songThumbnail.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2VlZSIvPgogIDx0ZXh0IHg9IjUwIiB5PSI1NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5UaHVtYm5haWw8L3RleHQ+Cjwvc3ZnPg==';
+    }
+    songThumbnail.style.display = 'block';
   }
 
-  // Handle youtube link
-  if (data.youtubeId && youtubeLink) {
-    youtubeLink.href = `https://www.youtube.com/watch?v=${data.youtubeId}`;
-    youtubeLink.classList.remove('hidden');
-  } else if (youtubeLink) {
-    youtubeLink.classList.add('hidden');
+  // Handle artist link - always show for testing
+  if (artistLink) {
+    if (data.artist_url) {
+      artistLink.href = data.artist_url;
+    } else {
+      artistLink.href = '#';
+    }
+    artistLink.style.display = 'inline-block';
   }
 
-  // Handle artist link
-  if (data.artist_url && artistLink) {
-    artistLink.href = data.artist_url;
-    artistLink.classList.remove('hidden');
-  } else if (artistLink) {
-    artistLink.classList.add('hidden');
-  }
-
-  // Handle lyrics link
-  if (data.genius_lyrics_url && lyricsLink) {
-    lyricsLink.href = data.genius_lyrics_url;
-    lyricsLink.classList.remove('hidden');
-  } else if (lyricsLink) {
-    lyricsLink.classList.add('hidden');
+  // Handle lyrics link - always show for testing
+  if (lyricsLink) {
+    if (data.genius_lyrics_url) {
+      lyricsLink.href = data.genius_lyrics_url;
+    } else {
+      lyricsLink.href = '#';
+    }
+    lyricsLink.style.display = 'inline-block';
   }
 
   // Handle lyrics
@@ -254,6 +250,9 @@ function displayResults(data) {
 
     // Fix common issues with broken lines
     cleanLyrics = cleanLyrics.replace(/([a-z])[\s]*\n[\s]*([a-z])/g, '$1 $2');
+
+    // Add line breaks before capitalized letters (except at the beginning)
+    cleanLyrics = cleanLyrics.replace(/(?<!^)([A-Z])/g, '\n$1');
 
     lyricsElem.textContent = cleanLyrics;
 
