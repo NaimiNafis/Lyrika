@@ -92,7 +92,7 @@ def identify_song_from_audio(audio_data):
 
         # Save the converted WAV file for manual inspection
         try:
-            with open("debug_output.wav", "wb") as debug_file:
+            with open("server/debug_output.wav", "wb") as debug_file:
                 debug_file.write(binary_data)
             print("Saved debug_output.wav for manual inspection.")
         except Exception as e:

@@ -1,7 +1,7 @@
 # API Keys - Never commit these!
 server/.env
-server/.venv/
-server/api/__pycache__/
+.venv
+**__pycache__/
 *.wav
 *.mp3
 
