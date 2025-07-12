@@ -52,10 +52,10 @@ function startListening() {
   showState(listeningState);
   clearTimeout(manualFallbackTimer);
   
-  // Show manual input after 10 seconds if no result
+  // Show manual input after 7 seconds if no result
   manualFallbackTimer = setTimeout(() => {
     manualInput.classList.remove('hidden');
-  }, 10000);
+  }, 7000);
   
   // Get streamId from background script
   chrome.runtime.sendMessage({ action: 'startListening' }, async (response) => {
@@ -137,12 +137,12 @@ function captureAudio(stream) {
     // Start recording
     mediaRecorder.start();
     
-    // Record for 10 seconds
-    setTimeout(() => {
-      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-        mediaRecorder.stop();
-      }
-    }, 10000);
+         // Record for 5 seconds
+     setTimeout(() => {
+       if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+         mediaRecorder.stop();
+       }
+     }, 5000);
   } catch (error) {
     console.error('Error setting up audio recording:', error);
     displayError('Error setting up audio recording: ' + error.message);
@@ -191,7 +191,23 @@ function displayResults(data) {
   
   // Handle lyrics
   if (data.lyrics && data.lyrics.trim()) {
-    lyricsElem.textContent = data.lyrics;
+    // Format lyrics: ensure proper line breaks and remove any remaining metadata
+    let cleanLyrics = data.lyrics.trim();
+    
+    // Remove any remaining metadata or headers that might still be present
+    cleanLyrics = cleanLyrics.replace(/^.*?(Lyrics|lyrics).*?$/m, '');
+    cleanLyrics = cleanLyrics.replace(/^.*?Contributors.*?$/m, '');
+    
+    // Fix common issues with broken lines
+    cleanLyrics = cleanLyrics.replace(/([a-z])[\s]*\n[\s]*([a-z])/g, '$1 $2');
+    
+    lyricsElem.textContent = cleanLyrics;
+    
+    // Add scrolling to the lyrics container if content is long
+    const lyricsContainer = document.querySelector('.lyrics-container');
+    if (lyricsContainer && cleanLyrics.split('\n').length > 10) {
+      lyricsContainer.classList.add('scrollable');
+    }
   } else {
     lyricsElem.textContent = 'This appears to be an instrumental track.';
   }

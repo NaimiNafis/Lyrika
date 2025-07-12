@@ -117,6 +117,15 @@ button {
   100% { height: 10px; }
 }
 
+/* Note styling */
+.note {
+  font-size: 12px;
+  color: var(--light-text-color);
+  font-style: italic;
+  text-align: center;
+  margin-top: -8px;
+}
+
 /* Results state */
 .song-info {
   display: flex;
@@ -184,6 +193,30 @@ button {
   margin-bottom: 15px;
 }
 
+.lyrics-container.scrollable {
+  max-height: 250px;
+  overflow-y: scroll;
+  scrollbar-width: thin;
+}
+
+.lyrics-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.lyrics-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.lyrics-container::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 4px;
+}
+
+.lyrics-container::-webkit-scrollbar-thumb:hover {
+  background: #3a76d8;
+}
+
 .lyrics-container h3 {
   font-size: 16px;
   margin-bottom: 10px;
@@ -192,8 +225,9 @@ button {
 
 #lyrics {
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.6;
   white-space: pre-wrap;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 /* Error state */
