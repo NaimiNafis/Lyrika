@@ -1,5 +1,6 @@
 # API Keys - Never commit these!
 server/.env
+.venv
 
 # Node modules
 node_modules/
