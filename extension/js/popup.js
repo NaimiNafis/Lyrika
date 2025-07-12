@@ -14,8 +14,6 @@ const startListeningBtn = document.getElementById('start-listening');
 const tryAgainBtn = document.getElementById('try-again');
 const backButton = document.getElementById('back-button');
 const manualSearchBtn = document.getElementById('manual-search');
-const manualSongInput = document.getElementById('manual-song');
-const manualArtistInput = document.getElementById('manual-artist');
 
 const songTitleElem = document.getElementById('song-title');
 const artistElem = document.getElementById('artist');
@@ -53,13 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
   tryAgainBtn.addEventListener('click', resetToInitialState);
   backButton.addEventListener('click', resetToInitialState);
   manualSearchBtn.addEventListener('click', handleManualSearch);
-  [manualSongInput, manualArtistInput].forEach(input => {
-    input.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter') {
-        handleManualSearch();
-      }
-    });
-  });
 
   // Add click to copy functionality
   songTitleElem.addEventListener('click', copySongInfo);
