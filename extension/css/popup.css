@@ -230,44 +230,39 @@ p {
   overflow-y: scroll;
   border: 1px solid var(--border-color);
   border-radius: 10px;
-  padding: 10%;
+  padding: 8%;
   background-color: white;
   margin-bottom: 15px;
   resize: vertical;
-  scrollbar-width: none;
-}
-
-.lyrics-container.scrollable {
-  max-height: 250px;
-  overflow-y: scroll;
-  scrollbar-width: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-color) transparent;
+  box-shadow:
+    inset 0 0 8px 2px rgba(58, 58, 58, 0.18),
+    inset 0 0 0 1px rgba(0,0,0,0.08); /* subtle inner border */
 }
 
 /* Webkit scrollbar styles for all lyrics containers */
-.lyrics-container::-webkit-scrollbar,
-.lyrics-container.scrollable::-webkit-scrollbar {
-  width: 0px;
+.lyrics-container::-webkit-scrollbar, body::-webkit-scrollbar {
+  width: 5px;
   background: transparent;
 }
 
-.lyrics-container::-webkit-scrollbar-track,
-.lyrics-container.scrollable::-webkit-scrollbar-track {
+.lyrics-container::-webkit-scrollbar-track, body::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.lyrics-container::-webkit-scrollbar-thumb,
-.lyrics-container.scrollable::-webkit-scrollbar-thumb {
+.lyrics-container::-webkit-scrollbar-thumb, body::-webkit-scrollbar-thumb{
   background: transparent;
+  border-radius: 3px;
 }
 
-.lyrics-container::-webkit-scrollbar-button,
-.lyrics-container.scrollable::-webkit-scrollbar-button {
-  display: none;
+.lyrics-container::-webkit-scrollbar-button, body::-webkit-scrollbar-button {
+  display: none; 
 }
 
 .lyrics-container h3 {
   font-size: 16px;
-  margin-bottom: 10px;
+  font-weight: bold;
   color: var(--primary-color);
 }
 
