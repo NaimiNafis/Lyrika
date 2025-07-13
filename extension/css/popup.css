@@ -36,6 +36,7 @@ body {
   width: 400px; /* Increased width to accommodate new features */
   background-color: var(--background-color);
   color: var(--text-color);
+  padding: 10px;
 }
 
 .bi-youtube {
@@ -207,7 +208,6 @@ p {
 .song-info-container {
   display: flex;
   align-items: center;
-  margin-bottom: 24px;
   background-color: #282828; /* Slightly lighter than background for contrast */
   border-radius: 8px;
   padding: 16px;
