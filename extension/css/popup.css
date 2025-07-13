@@ -385,10 +385,10 @@ p {
   border-radius: 10px;
 }
 
-.lyrics-container h3 {
+.tab-content h3 {
   font-size: 16px;
   font-weight: 700;
-  margin-bottom: 12px;
+  padding-top: 12px;
   color: var(--text-color);
 }
 
