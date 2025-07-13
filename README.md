@@ -13,7 +13,7 @@
 
 Lyrika is a browser extension that listens to audio playing in any browser tab, identifies the song, and displays its lyrics, turning your browser into a smart, lyrics-aware music player. 
 
-(サポーターズ Hackathon 7/2025)
+(サポーターズの努力賞チーム Hackathon 7/2025)
 
 ## ✨ Features
 
