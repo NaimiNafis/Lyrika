@@ -6,7 +6,7 @@ Python Flask server that processes audio data from the Lyrika browser extension,
 
 1. Create a virtual environment:
    ```
-   python -m venv venv
+   python3 -m venv venv
    ```
 
 2. Activate the virtual environment:
@@ -15,7 +15,7 @@ Python Flask server that processes audio data from the Lyrika browser extension,
 
 3. Install dependencies:
    ```
-   pip install -r requirements.txt
+   pip3 install -r requirements.txt
    ```
 
 4. Set up environment variables:
@@ -26,7 +26,7 @@ Python Flask server that processes audio data from the Lyrika browser extension,
 
 5. Start the server:
    ```
-   python app.py
+   python3 app.py
    ```
    The server will run at http://localhost:5000
 
@@ -82,6 +82,42 @@ Gets lyrics for a song by title and artist.
 }
 ```
 
+### GET /api/translate
+Translates lyrics to a different language using Google's Gemini API.
+
+**Query Parameters:**
+- `text` (required): Text to translate
+- `target_language` (required): Target language code (e.g., "es", "fr", "ja")
+
+**Response:**
+```json
+{
+  "status": "success",
+  "translated_text": "¿Es esto la vida real? ¿Es solo fantasía?...",
+  "source_language": "en",
+  "target_language": "es"
+}
+```
+
+### GET /api/similar?title=TITLE&artist=ARTIST
+Gets similar song recommendations based on the current song.
+
+**Query Parameters:**
+- `title` (required): Song title
+- `artist` (required): Artist name
+
+**Response:**
+```json
+{
+  "status": "success",
+  "similar_songs": [
+    {"title": "We Will Rock You", "artist": "Queen"},
+    {"title": "Don't Stop Me Now", "artist": "Queen"},
+    {"title": "Another One Bites the Dust", "artist": "Queen"}
+  ]
+}
+```
+
 ## Required API Keys
 
 1. **ACRCloud** - For song identification
@@ -94,6 +130,32 @@ Gets lyrics for a song by title and artist.
    - Create an API client
    - Copy Client Access Token to your `.env` file
 
+3. **Google Gemini API** - For AI enhancements (optional)
+   - Get API key from [Google AI Studio](https://ai.google.dev/)
+   - Copy API Key to your `.env` file as GEMINI_API_KEY
+
 ## Development
 
-The server includes mock implementations for both ACRCloud and Genius APIs for development without API keys. These mock implementations will be used automatically if no API keys are provided. 
+The server includes mock implementations for both ACRCloud and Genius APIs for development without API keys. These mock implementations will be used automatically if no API keys are provided.
+
+## Error Handling
+
+The server implements comprehensive error handling:
+
+- Missing API keys detected and appropriate fallbacks used
+- Network failures handled with retry mechanisms
+- Input validation for all API endpoints
+- Clear error messages with status codes
+
+## Extending the API
+
+To add new endpoints, create functions in the appropriate API module and register them in `app.py`.
+
+## Testing
+
+Run tests with:
+```
+python3 -m pytest
+```
+
+Example test files are included in the root directory. 
