@@ -49,10 +49,15 @@ def get_lyrics_by_song(title, artist=""):
             if raw_lyrics:
                 # Validate that the content looks like actual lyrics
                 if not is_valid_lyrics(raw_lyrics, title, artist):
-                    print(f"Content doesn't appear to be valid lyrics for {title} by {artist}")
+                    print(
+                        f"Content doesn't appear to be valid lyrics for {title} by {artist}"
+                    )
                     # Try again with a more specific search
-                    specific_search = f"{title} {artist} lyrics".strip()
+                    specific_search = f"{title} {artist}".strip()
+                    print(f"Trying specific search for lyrics: {specific_search}")
                     second_song_url = search_song(specific_search)
+                    # print(second_song_url)
+                    # print(f"Trying alternative search for lyrics: {specific_search}")
                     if second_song_url and second_song_url != song_url:
                         print(f"Trying alternative URL for lyrics: {second_song_url}")
                         raw_lyrics = scrape_lyrics(second_song_url)
@@ -64,13 +69,20 @@ def get_lyrics_by_song(title, artist=""):
                 if raw_lyrics:
                     try:
                         from api.gemini import format_lyrics_with_gemini, is_configured
-                        
+
                         if is_configured():
-                            print(f"Using Gemini to format lyrics for {title} by {artist}")
-                            formatted_result = format_lyrics_with_gemini(raw_lyrics, title, artist)
-                            
+                            print(
+                                f"Using Gemini to format lyrics for {title} by {artist}"
+                            )
+                            formatted_result = format_lyrics_with_gemini(
+                                raw_lyrics, title, artist
+                            )
+
                             # If Gemini formatting was successful, use those lyrics
-                            if formatted_result and formatted_result.get("status") == "success":
+                            if (
+                                formatted_result
+                                and formatted_result.get("status") == "success"
+                            ):
                                 lyrics = formatted_result.get("lyrics", raw_lyrics)
                                 return {
                                     "status": "success",
@@ -78,7 +90,7 @@ def get_lyrics_by_song(title, artist=""):
                                     "artist": artist,
                                     "lyrics": lyrics,
                                     "source_url": song_url,
-                                    "formatting": "gemini"
+                                    "formatting": "gemini",
                                 }
                     except Exception as formatting_error:
                         print(f"Error using Gemini for formatting: {formatting_error}")
@@ -91,7 +103,7 @@ def get_lyrics_by_song(title, artist=""):
                         "artist": artist,
                         "lyrics": raw_lyrics,
                         "source_url": song_url,
-                        "formatting": "basic"
+                        "formatting": "basic",
                     }
 
         # If we get here, we couldn't find lyrics
@@ -116,79 +128,87 @@ def get_lyrics_by_song(title, artist=""):
 def is_valid_lyrics(text, title, artist):
     """
     Validate if the scraped content appears to be actual lyrics.
-    
+
     Args:
         text (str): The scraped text to validate
         title (str): Song title
         artist (str): Artist name
-        
+
     Returns:
         bool: True if the content appears to be valid lyrics, False otherwise
     """
     if not text:
         return False
-    
+
     # Check if the text is too short to be lyrics
     if len(text.strip()) < 100:
         return False
-    
+
     # Check for common patterns that indicate the content is not lyrics
     non_lyrics_patterns = [
-        r'(?i)best of \d{4}',  # "Best of 2015"
-        r'(?i)worst of \d{4}',  # "Worst of 2015"
-        r'(?i)top \d+ (songs|tracks)',  # "Top 10 songs"
-        r'(?i)#\d+:',  # "#1:", "#2:", etc. (ranking format)
-        r'(?i)honorable mention',  # List articles often have this
-        r'(?i)ft\.\s+[\w\s]+#\d+',  # Artist featuring someone followed by a number/ranking
+        r"(?i)best of \d{4}",  # "Best of 2015"
+        r"(?i)worst of \d{4}",  # "Worst of 2015"
+        r"(?i)top \d+ (songs|tracks)",  # "Top 10 songs"
+        r"(?i)#\d+:",  # "#1:", "#2:", etc. (ranking format)
+        r"(?i)honorable mention",  # List articles often have this
+        r"(?i)ft\.\s+[\w\s]+#\d+",  # Artist featuring someone followed by a number/ranking
     ]
-    
+
     for pattern in non_lyrics_patterns:
         if re.search(pattern, text):
             print(f"Non-lyrics pattern detected: {pattern}")
             return False
-    
+
     # Check if the text has too many instances of "#" followed by a number (ranking lists)
-    ranking_matches = re.findall(r'#\d+', text)
+    ranking_matches = re.findall(r"#\d+", text)
     if len(ranking_matches) > 3:  # If there are multiple rankings, it's probably a list
         print(f"Found {len(ranking_matches)} ranking patterns, likely not lyrics")
         return False
-        
+
     # Check for playlist/song list format with timestamps (e.g., "Artist ~ Song (3:45)")
-    timestamp_pattern = r'[\w\s&]+ ~ [\w\s&\'.]+ \(\d+:\d+\)'
+    timestamp_pattern = r"[\w\s&]+ ~ [\w\s&\'.]+ \(\d+:\d+\)"
     timestamp_matches = re.findall(timestamp_pattern, text)
-    if len(timestamp_matches) > 2:  # If we find multiple song timestamps, it's a playlist
+    if (
+        len(timestamp_matches) > 2
+    ):  # If we find multiple song timestamps, it's a playlist
         print(f"Found {len(timestamp_matches)} timestamp patterns, likely a playlist")
         return False
-        
+
     # Check for comma-separated list of songs
-    comma_separated_songs = re.findall(r',\s*[\w\s&]+ ~ [\w\s&\'.]+ \(\d+:\d+\)', text)
+    comma_separated_songs = re.findall(r",\s*[\w\s&]+ ~ [\w\s&\'.]+ \(\d+:\d+\)", text)
     if len(comma_separated_songs) > 2:
-        print(f"Found {len(comma_separated_songs)} comma-separated song entries, likely a playlist")
+        print(
+            f"Found {len(comma_separated_songs)} comma-separated song entries, likely a playlist"
+        )
         return False
-    
+
     # Check for multiple artist names separated by commas or line breaks (common in playlists)
-    artist_pattern = r'(?:^|\n|\,)\s*([\w\s&]+),\s*$'
+    artist_pattern = r"(?:^|\n|\,)\s*([\w\s&]+),\s*$"
     artist_matches = re.findall(artist_pattern, text)
     if len(artist_matches) > 3:
-        print(f"Found {len(artist_matches)} artist name patterns, likely a playlist or list")
+        print(
+            f"Found {len(artist_matches)} artist name patterns, likely a playlist or list"
+        )
         return False
-    
+
     # Check for multiple timestamp patterns (MM:SS) which would indicate a playlist
-    time_pattern = r'\(\d+:\d+\)'
+    time_pattern = r"\(\d+:\d+\)"
     time_matches = re.findall(time_pattern, text)
-    if len(time_matches) > 3:  # If there are multiple timestamps, it's probably a playlist
+    if (
+        len(time_matches) > 3
+    ):  # If there are multiple timestamps, it's probably a playlist
         print(f"Found {len(time_matches)} time patterns, likely a playlist")
         return False
-    
+
     # Check for line structure typical of lyrics
-    lines = text.strip().split('\n')
+    lines = text.strip().split("\n")
     short_lines = [line for line in lines if 0 < len(line.strip()) < 80]
-    
+
     # Lyrics typically have a good percentage of short lines
     if len(short_lines) < 8 or len(short_lines) / len(lines) < 0.5:
         print("Line structure doesn't match typical lyrics pattern")
         return False
-    
+
     return True
 
 
@@ -258,45 +278,62 @@ def scrape_lyrics(url):
                 lyrics = lyrics_div.get_text()
 
                 # Clean up lyrics text
-                lyrics = re.sub(r'\d+ Contributors.*?Read More', '', lyrics, flags=re.DOTALL)  # Remove contributors, translations etc.
-                lyrics = re.sub(r'Translations.*?Lyrics', '', lyrics, flags=re.DOTALL)  # Remove translations section
-                lyrics = re.sub(r'[\w\s]+ Lyrics', '', lyrics)  # Remove "Song Title Lyrics" text
-                lyrics = re.sub(r'\[.*?\]', '', lyrics)  # Remove [Verse], [Chorus], etc.
-                
+                lyrics = re.sub(
+                    r"\d+ Contributors.*?Read More", "", lyrics, flags=re.DOTALL
+                )  # Remove contributors, translations etc.
+                lyrics = re.sub(
+                    r"Translations.*?Lyrics", "", lyrics, flags=re.DOTALL
+                )  # Remove translations section
+                lyrics = re.sub(
+                    r"[\w\s]+ Lyrics", "", lyrics
+                )  # Remove "Song Title Lyrics" text
+                lyrics = re.sub(
+                    r"\[.*?\]", "", lyrics
+                )  # Remove [Verse], [Chorus], etc.
+
                 # More aggressive cleaning of undesirable elements
-                lyrics = re.sub(r'Embed$', '', lyrics, flags=re.MULTILINE)  # Remove "Embed" text
-                lyrics = re.sub(r'Share URL$', '', lyrics, flags=re.MULTILINE)  # Remove "Share URL" text
-                lyrics = re.sub(r'Copy$', '', lyrics, flags=re.MULTILINE)  # Remove "Copy" text
-                
+                lyrics = re.sub(
+                    r"Embed$", "", lyrics, flags=re.MULTILINE
+                )  # Remove "Embed" text
+                lyrics = re.sub(
+                    r"Share URL$", "", lyrics, flags=re.MULTILINE
+                )  # Remove "Share URL" text
+                lyrics = re.sub(
+                    r"Copy$", "", lyrics, flags=re.MULTILINE
+                )  # Remove "Copy" text
+
                 # Fix line breaks issues
-                
+
                 # Step 1: Normalize all line breaks
-                lyrics = re.sub(r'\r\n', '\n', lyrics)
-                
+                lyrics = re.sub(r"\r\n", "\n", lyrics)
+
                 # Step 2: Join words broken across lines (lowercase to lowercase)
-                lyrics = re.sub(r'([a-z])[\s]*\n[\s]*([a-z])', r'\1 \2', lyrics)
-                
+                lyrics = re.sub(r"([a-z])[\s]*\n[\s]*([a-z])", r"\1 \2", lyrics)
+
                 # Step 3: Ensure proper spacing around punctuation
-                lyrics = re.sub(r'([.,;:!?])[\s]*\n', r'\1\n', lyrics)
-                
+                lyrics = re.sub(r"([.,;:!?])[\s]*\n", r"\1\n", lyrics)
+
                 # Step 4: Preserve intentional line breaks after punctuation
-                lyrics = re.sub(r'([.,;:!?])[\s]*([A-Z])', r'\1\n\2', lyrics)
-                
+                lyrics = re.sub(r"([.,;:!?])[\s]*([A-Z])", r"\1\n\2", lyrics)
+
                 # Step 5: Remove excess blank lines but preserve verse structure
-                lyrics = re.sub(r'\n{3,}', '\n\n', lyrics)
-                
+                lyrics = re.sub(r"\n{3,}", "\n\n", lyrics)
+
                 # Remove leading/trailing whitespace from each line
                 lyrics_lines = [line.strip() for line in lyrics.split("\n")]
                 lyrics = "\n".join(lyrics_lines)
 
                 # Final cleanup of excessive whitespace and blank lines
-                lyrics = re.sub(r' {2,}', ' ', lyrics)  # Replace multiple spaces with single space
-                lyrics = re.sub(r'^\n+', '', lyrics)  # Remove leading blank lines
-                lyrics = re.sub(r'\n+$', '', lyrics)  # Remove trailing blank lines
-                lyrics = re.sub(r'\n{3,}', '\n\n', lyrics)  # Limit consecutive newlines to 2
-                
-                return lyrics.strip()
+                lyrics = re.sub(
+                    r" {2,}", " ", lyrics
+                )  # Replace multiple spaces with single space
+                lyrics = re.sub(r"^\n+", "", lyrics)  # Remove leading blank lines
+                lyrics = re.sub(r"\n+$", "", lyrics)  # Remove trailing blank lines
+                lyrics = re.sub(
+                    r"\n{3,}", "\n\n", lyrics
+                )  # Limit consecutive newlines to 2
 
+                return lyrics.strip()
 
     except Exception as e:
         print(f"Error scraping lyrics: {e}")

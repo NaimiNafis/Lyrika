@@ -14,10 +14,7 @@ import subprocess
 import tempfile
 import time
 from urllib.parse import urlencode
-import json
-import io
-import subprocess
-import tempfile
+
 import requests
 
 # ACRCloud API configuration
@@ -66,7 +63,7 @@ def identify_song_from_audio(audio_data):
     try:
         # Convert base64 string to binary
         binary_data = base64.b64decode(audio_data)
-        
+
         # Check audio format and size
         # print(f"Audio data length: {len(audio_data)} characters")
         # print(f"Binary data size: {len(binary_data)} bytes")
@@ -124,15 +121,15 @@ def identify_song_from_audio(audio_data):
             with open("server/debug_output.wav", "wb") as debug_file:
                 debug_file.write(binary_data)
         except Exception as e:
-            print(f'Error saving debug_output.wav: {e}')
-        
+            print(f"Error saving debug_output.wav: {e}")
+
         # Prepare request
         http_method = "POST"
         http_uri = "/v1/identify"
         data_type = "audio"
         signature_version = "1"
         timestamp = str(int(time.time()))
-        
+
         # Generate signature
         string_to_sign = "\n".join(
             [
@@ -155,34 +152,36 @@ def identify_song_from_audio(audio_data):
 
         # Prepare request data
         # ACRCloud expects the audio file to be sent as 'sample' in multipart form data
-        files = {
-            "sample": ("sample.wav", binary_data, "audio/wav")
-        }
-        
+        files = {"sample": ("sample.wav", binary_data, "audio/wav")}
+
         data = {
             "access_key": ACR_ACCESS_KEY,
             "data_type": data_type,
             "signature": sign,
             "signature_version": signature_version,
             "timestamp": timestamp,
-            "sample_bytes": str(len(binary_data))  # Add sample_bytes as required by ACRCloud
+            "sample_bytes": str(
+                len(binary_data)
+            ),  # Add sample_bytes as required by ACRCloud
         }
-        
+
         # Make request to ACRCloud
         url = f"https://{ACR_HOST}{http_uri}"
         print(f"Making request to ACRCloud: {url}")
-        print(f"ACR_ACCESS_KEY: {ACR_ACCESS_KEY[:10]}...")  # Show first 10 chars for debugging
+        print(
+            f"ACR_ACCESS_KEY: {ACR_ACCESS_KEY[:10]}..."
+        )  # Show first 10 chars for debugging
         print(f"Audio data size: {len(binary_data)} bytes")
         print(f"Request data: {data}")
         print(f"String to sign: {string_to_sign}")
-        
+
         response = requests.post(url, files=files, data=data)
-        print(f"ACRCloud response status code: {response.status_code}")
-        
+        # print(f"ACRCloud response status code: {response.status_code}")
+
         if response.status_code == 200:
             result = response.json()
-            print(f"ACRCloud response: {json.dumps(result, indent=2)}")
-            
+            # print(f"ACRCloud response: {json.dumps(result, indent=2)}")
+
             # Check if a match was found
             if (
                 result.get("status", {}).get("code") == 0
@@ -199,31 +198,25 @@ def identify_song_from_audio(audio_data):
 
                 # Extract YouTube ID if available
                 youtube_id = None
-                if "external_metadata" in music and "youtube" in music["external_metadata"]:
+                if (
+                    "external_metadata" in music
+                    and "youtube" in music["external_metadata"]
+                ):
                     youtube_id = music["external_metadata"]["youtube"].get("vid")
-                
+
                 # Extract Spotify ID if available
                 spotify_id = None
-                if "external_metadata" in music and "spotify" in music["external_metadata"]:
-                    spotify_id = music["external_metadata"]["spotify"].get("track", {}).get("id")
-                
+                if (
+                    "external_metadata" in music
+                    and "spotify" in music["external_metadata"]
+                ):
+                    spotify_id = (
+                        music["external_metadata"]["spotify"].get("track", {}).get("id")
+                    )
+
                 # Extract album artwork URLs
-                album_artwork = None
-                # Check if there's cover art in the ACRCloud response
-                if music.get("album") and music["album"].get("coverart_url"):
-                    album_artwork = music["album"].get("coverart_url")
-                
-                # Check for Spotify album cover
-                if "external_metadata" in music and "spotify" in music["external_metadata"]:
-                    if music["external_metadata"]["spotify"].get("album", {}).get("covers"):
-                        covers = music["external_metadata"]["spotify"]["album"]["covers"]
-                        if covers and len(covers) > 0:
-                            album_artwork = covers[0].get("url")
-                
-                # Check for Deezer album cover (often higher quality)
-                if "external_metadata" in music and "deezer" in music["external_metadata"]:
-                    if music["external_metadata"]["deezer"].get("album", {}).get("cover"):
-                        album_artwork = music["external_metadata"]["deezer"]["album"]["cover"]
+                singleArtwork = search_song(f"{title} {artist}")
+                album_artwork = singleArtwork.get("thumbnail")
 
                 return {
                     "status": "success",
@@ -275,7 +268,7 @@ def mock_identify_song():
                 "album": {"name": "A Night at the Opera"},
                 "external_metadata": {
                     "youtube": {"vid": "fJ9rUzIMcZQ"},
-                    "spotify": {"track": {"id": "6l8GvAyoUZwWDgF1e4822w"}}
+                    "spotify": {"track": {"id": "6l8GvAyoUZwWDgF1e4822w"}},
                 },
             },
         }
